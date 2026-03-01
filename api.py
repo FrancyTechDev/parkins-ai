@@ -109,3 +109,4 @@ def log_event(ts: int, type: str, severity: int = 1, meta: str = ""):
     c.commit()
     c.close()
     return {"ok": True}
+

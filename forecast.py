@@ -19,6 +19,7 @@ def forecast_72h(days_back: int = 7):
     df["dt"] = pd.to_datetime(df["ts"], unit="s")
     df = df.set_index("dt").sort_index()
     hourly = df["tsi"].resample("1h").mean().dropna()
+
     if len(hourly) < 12:
         return None
 
