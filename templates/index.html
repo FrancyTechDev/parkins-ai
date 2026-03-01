@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PARKINS-AI Dashboard</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:24px;max-width:980px}
+    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .kpi{flex:1;min-width:220px}
+    code{background:#f6f6f6;padding:2px 6px;border-radius:6px}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #222;background:#111;color:#fff;cursor:pointer}
+    input{padding:10px;border-radius:10px;border:1px solid #ccc}
+    small{color:#666}
+    pre{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:12px}
+  </style>
+</head>
+<body>
+  <h1>PARKINS-AI — Dashboard</h1>
+  <div class="card">
+    <div class="row">
+      <div class="kpi"><b>Stato</b><div id="state">…</div></div>
+      <div class="kpi"><b>Forecast 72h</b><div id="forecast">…</div></div>
+      <div class="kpi"><b>Prognosi</b><div id="prognosis">…</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <b>Feedback giornaliero (1–5)</b><br/>
+    <small>Day formato: YYYY-MM-DD</small><br/><br/>
+    <input id="day" placeholder="2026-03-01" />
+    <input id="score" placeholder="1..5" />
+    <input id="note" placeholder="nota (opzionale)" style="min-width:320px"/>
+    <button onclick="sendFeedback()">Invia</button>
+    <div id="fbres"></div>
+  </div>
+
+  <div class="card">
+    <b>Report</b><br/><br/>
+    <button onclick="genPDF()">Genera PDF</button>
+    <span id="pdfres"></span>
+  </div>
+
+  <div class="card">
+    <b>Debug JSON (raw)</b>
+    <pre id="raw">…</pre>
+  </div>
+
+<script>
+async function loadAll(){
+  const [s,f,p] = await Promise.all([
+    fetch('/api/state').then(r=>r.json()),
+    fetch('/api/forecast').then(r=>r.json()),
+    fetch('/api/prognosis').then(r=>r.json()),
+  ]);
+
+  document.getElementById('raw').textContent = JSON.stringify({state:s, forecast:f, prognosis:p}, null, 2);
+
+  document.getElementById('state').textContent =
+    s.current ? `TSI=${s.current.tsi} | rms_diff=${s.current.rms_diff.toFixed(4)} | band=${s.current.band_4_6.toFixed(3)} | peaks=${s.current.peaks}` :
+    (s.message || 'No data');
+
+  document.getElementById('forecast').textContent =
+    f ? `pred=${f.pred.toFixed(2)} (80%: ${f.lo.toFixed(2)}–${f.hi.toFixed(2)}) | hours=${f.hours_used}` :
+    'null';
+
+  const c = p.course || {};
+  const t = p.time_to_severe || {};
+  const so = p.symptoms_outlook || {};
+
+  document.getElementById('prognosis').textContent =
+    (c.status === 'ok')
+      ? `andamento=${c.course} | trend=${c.trend_tsi_per_day.toFixed(3)} TSI/giorno | conf=${c.confidence} | grave=${t.reachable ? (t.days_est.toFixed(1)+'g') : 'non stimabile'} | sintomi=${so.likely}`
+      : (c.message || 'insufficient_data');
+}
+
+async function genPDF(){
+  const r = await fetch('/api/report/pdf');
+  const j = await r.json();
+  document.getElementById('pdfres').textContent = j.ok ? ' ✔ creato (scarica sotto)' : ' ✖ errore';
+  if(j.ok){
+    // link download
+    const a = document.createElement('a');
+    a.href = '/download/report.pdf?ts=' + Date.now();
+    a.textContent = ' Scarica report.pdf';
+    a.style.marginLeft = '12px';
+    document.getElementById('pdfres').appendChild(a);
+  }
+}
+
+async function sendFeedback(){
+  const day = document.getElementById('day').value.trim();
+  const score = document.getElementById('score').value.trim();
+  const note = document.getElementById('note').value.trim();
+  const url = `/api/feedback?day=${encodeURIComponent(day)}&score=${encodeURIComponent(score)}&note=${encodeURIComponent(note)}`;
+  const r = await fetch(url, {method:'POST'});
+  const j = await r.json();
+  document.getElementById('fbres').textContent = j.ok ? '✔ salvato' : ('✖ '+(j.error||'errore'));
+}
+
+loadAll();
+setInterval(loadAll, 3000);
+</script>
+</body>
+</html>

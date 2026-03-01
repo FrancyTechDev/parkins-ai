@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pyserial
+pandas
+numpy
+scipy
+jinja2
+reportlab

@@ -1,0 +1,82 @@
+import time
+import pandas as pd
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, FileResponse
+
+from fastapi.templating import Jinja2Templates
+
+from db import init_db, connect
+from baseline import recompute_baseline
+from aggregate import recompute_daily, recompute_weekly, recompute_monthly
+from forecast import forecast_72h
+from prognosis import course_outlook, time_to_threshold, symptoms_outlook
+from report_pdf import generate_report_pdf
+from config import TSI_SEVERE
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+init_db()
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/api/state")
+def state():
+    c = connect()
+    df = pd.read_sql("SELECT * FROM samples_ref ORDER BY ts DESC LIMIT 1", c)
+    c.close()
+    if df.empty:
+        return {"current": None, "message": "No data yet"}
+    return {"current": df.iloc[0].to_dict()}
+
+
+@app.post("/api/feedback")
+def feedback(day: str, score: int, note: str = ""):
+    if score < 1 or score > 5:
+        return {"ok": False, "error": "score must be 1..5"}
+
+    c = connect()
+    c.execute(
+        "INSERT OR REPLACE INTO user_feedback(day,score,note,created_ts) VALUES (?,?,?,?)",
+        (day, score, note, int(time.time()))
+    )
+    c.commit()
+    c.close()
+
+    return {"ok": True}
+
+
+@app.post("/api/agg")
+def recompute_all():
+    recompute_baseline()
+    recompute_daily(7)
+    recompute_weekly()
+    recompute_monthly()
+    return {"ok": True}
+
+
+@app.get("/api/forecast")
+def get_forecast():
+    return forecast_72h()
+
+
+@app.get("/api/prognosis")
+def get_prognosis():
+    return {
+        "course": course_outlook(),
+        "time_to_severe": time_to_threshold(TSI_SEVERE),
+        "symptoms_outlook": symptoms_outlook()
+    }
+
+
+@app.get("/api/report/pdf")
+def report_pdf_generate():
+    generate_report_pdf("report.pdf")
+    return {"ok": True, "file": "report.pdf"}
+
+
+@app.get("/download/report.pdf")
+def download_report_pdf():
+    return FileResponse("report.pdf", media_type="application/pdf", filename="report.pdf")
