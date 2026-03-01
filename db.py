@@ -1,12 +1,15 @@
 import sqlite3
 from config import DB_PATH
 
-
 def connect():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL;")
+    # timeout per evitare blocchi su Windows
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
+    # WAL se possibile (su alcuni setup Windows può dare problemi: non deve bloccare)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except sqlite3.OperationalError:
+        pass
     return conn
-
 
 def init_db():
     c = connect()
@@ -25,9 +28,7 @@ def init_db():
       tsi REAL
     )
     """)
-
     cur.execute("CREATE INDEX IF NOT EXISTS idx_samples_ts ON samples_ref(ts);")
-
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS baseline (
@@ -46,7 +47,6 @@ def init_db():
     )
     """)
 
-
     cur.execute("""
     CREATE TABLE IF NOT EXISTS user_feedback (
       day TEXT PRIMARY KEY,
@@ -56,20 +56,17 @@ def init_db():
     )
     """)
 
-
     cur.execute("""
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ts INTEGER NOT NULL,
-      type TEXT NOT NULL,            -- fall | near_fall | freeze | sos
-      severity INTEGER DEFAULT 1,    -- 1..3
+      type TEXT NOT NULL,
+      severity INTEGER DEFAULT 1,
       meta TEXT DEFAULT ""
     )
     """)
-
     cur.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);")
-
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS daily_agg (
@@ -90,7 +87,6 @@ def init_db():
     )
     """)
 
-
     cur.execute("""
     CREATE TABLE IF NOT EXISTS weekly_agg (
       week TEXT PRIMARY KEY,
@@ -100,7 +96,6 @@ def init_db():
       updated_ts INTEGER NOT NULL
     )
     """)
-
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS monthly_agg (
