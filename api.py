@@ -17,12 +17,10 @@ from config import TSI_SEVERE
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-
 init_db()
 
 if os.getenv("DEMO_MODE") == "1":
     seed_demo(days=7, step_sec=10)
-
 
 REPORT_PATH = "/tmp/report.pdf" if os.getenv("RENDER") else "report.pdf"
 
@@ -46,7 +44,6 @@ def state():
 def feedback(day: str, score: int, note: str = ""):
     if score < 1 or score > 5:
         return {"ok": False, "error": "score must be 1..5"}
-
     c = connect()
     c.execute(
         "INSERT OR REPLACE INTO user_feedback(day,score,note,created_ts) VALUES (?,?,?,?)",
