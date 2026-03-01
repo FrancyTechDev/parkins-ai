@@ -89,3 +89,23 @@ def report_pdf_generate():
 @app.get("/download/report.pdf")
 def download_report_pdf():
     return FileResponse(REPORT_PATH, media_type="application/pdf", filename="report.pdf")
+
+@app.get("/ping")
+def ping():
+    return {"pong": True, "module": "api.py"}
+
+@app.post("/api/event")
+def log_event(ts: int, type: str, severity: int = 1, meta: str = ""):
+    if type not in ("fall", "near_fall", "freeze", "sos"):
+        return {"ok": False, "error": "type must be fall|near_fall|freeze|sos"}
+    if severity < 1 or severity > 3:
+        return {"ok": False, "error": "severity must be 1..3"}
+
+    c = connect()
+    c.execute(
+        "INSERT INTO events(ts,type,severity,meta) VALUES (?,?,?,?)",
+        (ts, type, severity, meta)
+    )
+    c.commit()
+    c.close()
+    return {"ok": True}

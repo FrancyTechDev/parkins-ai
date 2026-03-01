@@ -1,8 +1,12 @@
 import sqlite3
 from config import DB_PATH
 
+
 def connect():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    return conn
+
 
 def init_db():
     c = connect()
@@ -18,9 +22,12 @@ def init_db():
       gsr REAL,
       batt REAL,
       qf INTEGER DEFAULT 0,
-      tsi INTEGER
+      tsi REAL
     )
     """)
+
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_samples_ts ON samples_ref(ts);")
+
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS baseline (
@@ -39,6 +46,7 @@ def init_db():
     )
     """)
 
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS user_feedback (
       day TEXT PRIMARY KEY,
@@ -48,6 +56,21 @@ def init_db():
     )
     """)
 
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts INTEGER NOT NULL,
+      type TEXT NOT NULL,            -- fall | near_fall | freeze | sos
+      severity INTEGER DEFAULT 1,    -- 1..3
+      meta TEXT DEFAULT ""
+    )
+    """)
+
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);")
+
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS daily_agg (
       day TEXT PRIMARY KEY,
@@ -55,9 +78,18 @@ def init_db():
       tsi_p90 REAL,
       tremor_minutes REAL,
       sample_count INTEGER,
+
+      falls INTEGER DEFAULT 0,
+      near_falls INTEGER DEFAULT 0,
+      freezes INTEGER DEFAULT 0,
+      sos INTEGER DEFAULT 0,
+
+      dpi REAL,
+
       updated_ts INTEGER NOT NULL
     )
     """)
+
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS weekly_agg (
@@ -68,6 +100,7 @@ def init_db():
       updated_ts INTEGER NOT NULL
     )
     """)
+
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS monthly_agg (
@@ -87,15 +120,6 @@ def init_db():
       hi REAL,
       method TEXT,
       PRIMARY KEY(created_ts, horizon_h)
-    )
-    """)
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS events (
-      ts INTEGER NOT NULL,
-      type TEXT NOT NULL,
-      severity REAL,
-      meta TEXT
     )
     """)
 

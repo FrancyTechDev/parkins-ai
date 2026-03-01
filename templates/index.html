@@ -3,89 +3,320 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>PARKINS-AI Dashboard</title>
+  <title>PARKINS-AI</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:24px;max-width:980px}
-    .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .kpi{flex:1;min-width:220px}
-    code{background:#f6f6f6;padding:2px 6px;border-radius:6px}
-    button{padding:10px 14px;border-radius:10px;border:1px solid #222;background:#111;color:#fff;cursor:pointer}
-    input{padding:10px;border-radius:10px;border:1px solid #ccc}
-    small{color:#666}
-    pre{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:12px}
+    :root{
+      --bg:#0b0f17; --panel:#111827; --panel2:#0f172a;
+      --txt:#e5e7eb; --muted:#9ca3af; --line:#1f2937;
+      --good:#34d399; --warn:#fbbf24; --bad:#fb7185; --acc:#60a5fa;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(900px 500px at 15% 10%, rgba(96,165,250,.20), transparent 60%),
+                  radial-gradient(900px 500px at 85% 15%, rgba(52,211,153,.15), transparent 55%),
+                  var(--bg);
+      color:var(--txt);
+    }
+    a{color:var(--acc); text-decoration:none}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 40px}
+    .top{
+      display:flex; gap:14px; align-items:center; justify-content:space-between;
+      padding:18px 18px; border:1px solid var(--line); border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(17,24,39,.85), rgba(15,23,42,.65));
+      box-shadow: var(--shadow);
+    }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(96,165,250,.9), rgba(52,211,153,.85));
+      box-shadow: 0 8px 18px rgba(96,165,250,.22);
+    }
+    .title{line-height:1.1}
+    .title h1{margin:0; font-size:18px; letter-spacing:.4px}
+    .title p{margin:4px 0 0; color:var(--muted); font-size:12px}
+    .pillrow{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      font-size:12px; color:var(--txt);
+      border:1px solid var(--line); background: rgba(17,24,39,.65);
+      padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center;
+    }
+    .dot{width:8px; height:8px; border-radius:99px; background:var(--muted)}
+    .dot.good{background:var(--good)}
+    .dot.warn{background:var(--warn)}
+    .dot.bad{background:var(--bad)}
+    .grid{display:grid; grid-template-columns: repeat(12,1fr); gap:14px; margin-top:14px}
+    .card{
+      border:1px solid var(--line); border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(17,24,39,.75), rgba(15,23,42,.55));
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .card h2{margin:0 0 8px; font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.3px}
+    .kpi{font-size:28px; font-weight:800; letter-spacing:.2px}
+    .sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.35}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .tag{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color:var(--muted);
+    }
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.10);
+      background: rgba(96,165,250,.18);
+      color: var(--txt);
+      padding:10px 12px; border-radius: 14px;
+      cursor:pointer; font-weight:700; font-size:12px;
+      transition: transform .06s ease, background .12s ease;
+    }
+    .btn:hover{background: rgba(96,165,250,.24)}
+    .btn:active{transform: translateY(1px)}
+    .btn.ghost{background: rgba(17,24,39,.55)}
+    .btn.danger{background: rgba(251,113,133,.16)}
+    input{
+      width:100%; padding:11px 12px; border-radius: 14px;
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color: var(--txt);
+      outline:none;
+    }
+    input::placeholder{color:#6b7280}
+    .muted{color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .span-4{grid-column: span 4}
+    .span-6{grid-column: span 6}
+    .span-8{grid-column: span 8}
+    .span-12{grid-column: span 12}
+    @media(max-width:900px){
+      .span-4,.span-6,.span-8{grid-column: span 12}
+      .pillrow{justify-content:flex-start}
+      .top{flex-direction:column; align-items:flex-start}
+    }
+    .hr{height:1px; background: var(--line); margin:12px 0}
+    .ok{color:var(--good)}
+    .err{color:var(--bad)}
+    pre{
+      margin:0; white-space:pre-wrap; word-break:break-word;
+      background: rgba(11,15,23,.55); border:1px solid var(--line);
+      padding:12px; border-radius: var(--r);
+      max-height: 300px; overflow:auto;
+    }
   </style>
 </head>
 <body>
-  <h1>PARKINS-AI — Dashboard</h1>
-  <div class="card">
-    <div class="row">
-      <div class="kpi"><b>Stato</b><div id="state">…</div></div>
-      <div class="kpi"><b>Forecast 72h</b><div id="forecast">…</div></div>
-      <div class="kpi"><b>Prognosi</b><div id="prognosis">…</div></div>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="title">
+          <h1>PARKINS-AI</h1>
+          <p>Monitoraggio + previsione locale. Report automatici. (Demo quando non c’è ESP32)</p>
+        </div>
+      </div>
+      <div class="pillrow">
+        <div class="pill"><span id="modeDot" class="dot"></span><span id="modeText">MODE</span></div>
+        <div class="pill"><span class="dot good"></span><span id="lastUpdate">Aggiornamento: —</span></div>
+        <div class="pill"><span class="dot"></span><span class="mono" id="apiBase">/api</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Stato -->
+      <div class="card span-4">
+        <h2>STATO (ultimo campione)</h2>
+        <div class="kpi" id="kpiTSI">—</div>
+        <div class="row" style="margin-top:10px">
+          <div class="tag" id="tagQual">Qualità: —</div>
+          <div class="tag" id="tagFreq">Freq: —</div>
+        </div>
+        <div class="sub" id="stateSub">In attesa dati…</div>
+      </div>
+
+      <!-- Forecast -->
+      <div class="card span-4">
+        <h2>FORECAST 72h</h2>
+        <div class="kpi" id="kpiPred">—</div>
+        <div class="row" style="margin-top:10px">
+          <div class="tag" id="tagPI">PI 80%: —</div>
+          <div class="tag" id="tagHours">Ore: —</div>
+        </div>
+        <div class="sub" id="fcSub">—</div>
+      </div>
+
+      <!-- Prognosi -->
+      <div class="card span-4">
+        <h2>PROGNOSI (basata su TSI)</h2>
+        <div class="kpi" id="kpiCourse">—</div>
+        <div class="row" style="margin-top:10px">
+          <div class="tag" id="tagTrend">Trend: —</div>
+          <div class="tag" id="tagSevere">Grave: —</div>
+        </div>
+        <div class="sub" id="progSub">—</div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="card span-6">
+        <h2>FEEDBACK GIORNALIERO (1–5)</h2>
+        <div class="row">
+          <div style="flex:1; min-width:180px">
+            <div class="muted" style="font-size:12px; margin-bottom:6px">Day (YYYY-MM-DD)</div>
+            <input id="day" placeholder="2026-03-01"/>
+          </div>
+          <div style="flex:1; min-width:140px">
+            <div class="muted" style="font-size:12px; margin-bottom:6px">Score (1..5)</div>
+            <input id="score" placeholder="3"/>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="muted" style="font-size:12px; margin-bottom:6px">Nota (opzionale)</div>
+          <input id="note" placeholder="Es. giornata pesante, stress, poco sonno…"/>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" onclick="sendFeedback()">Invia feedback</button>
+          <span id="fbres" class="muted"></span>
+        </div>
+        <div class="hr"></div>
+        <div class="sub">
+          Suggerimento: inserisci il feedback ogni sera. Serve a personalizzare soglie e interpretazione nel report.
+        </div>
+      </div>
+
+      <!-- Report -->
+      <div class="card span-6">
+        <h2>REPORT</h2>
+        <div class="row">
+          <button class="btn" onclick="genPDF()">Genera PDF</button>
+          <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+        </div>
+        <div class="sub" id="pdfres" style="margin-top:10px">—</div>
+        <div class="hr"></div>
+        <div class="sub">
+          Nota: le stime “grave/peggioramento” sono calcolate come superamento di soglie dell’indice TSI, non come diagnosi clinica.
+        </div>
+      </div>
+
+      <!-- Debug -->
+      <div class="card span-12">
+        <h2>DEBUG JSON (RAW)</h2>
+        <pre id="raw">…</pre>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <b>Feedback giornaliero (1–5)</b><br/>
-    <small>Day formato: YYYY-MM-DD</small><br/><br/>
-    <input id="day" placeholder="2026-03-01" />
-    <input id="score" placeholder="1..5" />
-    <input id="note" placeholder="nota (opzionale)" style="min-width:320px"/>
-    <button onclick="sendFeedback()">Invia</button>
-    <div id="fbres"></div>
-  </div>
-
-  <div class="card">
-    <b>Report</b><br/><br/>
-    <button onclick="genPDF()">Genera PDF</button>
-    <span id="pdfres"></span>
-  </div>
-
-  <div class="card">
-    <b>Debug JSON (raw)</b>
-    <pre id="raw">…</pre>
-  </div>
-
 <script>
+function fmt(n, d=2){
+  if(n===undefined || n===null || Number.isNaN(n)) return "—";
+  return Number(n).toFixed(d);
+}
+function setText(id, txt){ document.getElementById(id).textContent = txt; }
+function nowISO(){
+  const d=new Date(); return d.toISOString().slice(0,19).replace("T"," ");
+}
+
+async function safeJson(url){
+  try{
+    const r = await fetch(url);
+    if(!r.ok) return {__error: true, status: r.status};
+    return await r.json();
+  }catch(e){
+    return {__error: true, msg: String(e)};
+  }
+}
+
+function tsiColor(tsi){
+  if(tsi===null||tsi===undefined) return "dot";
+  if(tsi>=85) return "dot bad";
+  if(tsi>=70) return "dot warn";
+  return "dot good";
+}
+
 async function loadAll(){
-  const [s,f,p] = await Promise.all([
-    fetch('/api/state').then(r=>r.json()),
-    fetch('/api/forecast').then(r=>r.json()),
-    fetch('/api/prognosis').then(r=>r.json()),
-  ]);
+  const s = await safeJson('/api/state');
+  const f = await safeJson('/api/forecast');
+  const p = await safeJson('/api/prognosis');
 
-  document.getElementById('raw').textContent = JSON.stringify({state:s, forecast:f, prognosis:p}, null, 2);
+  setText('lastUpdate', `Aggiornamento: ${nowISO()}`);
+  setText('raw', JSON.stringify({state:s, forecast:f, prognosis:p}, null, 2));
 
-  document.getElementById('state').textContent =
-    s.current ? `TSI=${s.current.tsi} | rms_diff=${s.current.rms_diff.toFixed(4)} | band=${s.current.band_4_6.toFixed(3)} | peaks=${s.current.peaks}` :
-    (s.message || 'No data');
+  // MODE badge: demo se ci sono dati ma nessun ESP (semplice euristica)
+  // Se DB vuoto -> “NO DATA”; se pieno e DEMO_MODE era attivo -> in pratica è demo.
+  // Non possiamo leggere env dal client, quindi usiamo: se state.current esiste ma tremor_f è sempre nel range e batt costante -> assume demo.
+  let mode = "LIVE/UNKNOWN";
+  let modeCls = "dot good";
+  if(!s.current){
+    mode = "NO DATA";
+    modeCls = "dot bad";
+  } else {
+    // euristica demo
+    const batt = s.current.batt;
+    if (batt === 3.9) { mode = "DEMO"; modeCls = "dot warn"; }
+  }
+  document.getElementById('modeDot').className = modeCls;
+  setText('modeText', mode);
 
-  document.getElementById('forecast').textContent =
-    f ? `pred=${f.pred.toFixed(2)} (80%: ${f.lo.toFixed(2)}–${f.hi.toFixed(2)}) | hours=${f.hours_used}` :
-    'null';
+  // --- STATE ---
+  if(s.current){
+    const tsi = s.current.tsi;
+    setText('kpiTSI', tsi===null ? "TSI —" : `TSI ${tsi}`);
+    const qf = s.current.qf;
+    setText('tagQual', `Qualità: ${qf}`);
+    const tf = s.current.tremor_f;
+    setText('tagFreq', `Freq: ${tf?fmt(tf,2)+" Hz":"—"}`);
+    setText('stateSub',
+      `rms_diff=${fmt(s.current.rms_diff,4)} | band_4_6=${fmt(s.current.band_4_6,3)} | peaks=${s.current.peaks}`
+    );
+  } else {
+    setText('kpiTSI', "—");
+    setText('tagQual', "Qualità: —");
+    setText('tagFreq', "Freq: —");
+    setText('stateSub', s.message || "In attesa dati…");
+  }
 
-  const c = p.course || {};
-  const t = p.time_to_severe || {};
-  const so = p.symptoms_outlook || {};
+  // --- FORECAST ---
+  if(f && !f.__error && f.pred !== undefined && f.pred !== null){
+    setText('kpiPred', fmt(f.pred,2));
+    setText('tagPI', `PI 80%: ${fmt(f.lo,2)}–${fmt(f.hi,2)}`);
+    setText('tagHours', `Ore: ${f.hours_used ?? "—"}`);
+    setText('fcSub', `Metodo: ${f.method || "—"}`);
+  } else {
+    setText('kpiPred', "—");
+    setText('tagPI', "PI 80%: —");
+    setText('tagHours', "Ore: —");
+    setText('fcSub', f && f.__error ? `Errore forecast (${f.status || "network"})` : "Forecast non disponibile");
+  }
 
-  document.getElementById('prognosis').textContent =
-    (c.status === 'ok')
-      ? `andamento=${c.course} | trend=${c.trend_tsi_per_day.toFixed(3)} TSI/giorno | conf=${c.confidence} | grave=${t.reachable ? (t.days_est.toFixed(1)+'g') : 'non stimabile'} | sintomi=${so.likely}`
-      : (c.message || 'insufficient_data');
+  // --- PROGNOSIS ---
+  const c = (p && p.course) ? p.course : null;
+  const t = (p && p.time_to_severe) ? p.time_to_severe : null;
+  const so = (p && p.symptoms_outlook) ? p.symptoms_outlook : null;
+
+  if(c && c.status==="ok"){
+    setText('kpiCourse', (c.course || "—").toUpperCase());
+    setText('tagTrend', `Trend: ${fmt(c.trend_tsi_per_day,3)}/g`);
+    if(t && t.status==="ok" && t.reachable){
+      setText('tagSevere', `Grave: ${fmt(t.days_est,1)}g`);
+    } else if(t && t.status==="ok" && t.reachable===false){
+      setText('tagSevere', `Grave: non stimabile`);
+    } else {
+      setText('tagSevere', `Grave: —`);
+    }
+    setText('progSub', `Sintomi: ${so && so.likely ? so.likely : "—"} | confidenza: ${c.confidence || "—"}`);
+  } else {
+    setText('kpiCourse', "—");
+    setText('tagTrend', "Trend: —");
+    setText('tagSevere', "Grave: —");
+    setText('progSub', (c && c.message) ? c.message : "Prognosi non disponibile");
+  }
 }
 
 async function genPDF(){
-  const r = await fetch('/api/report/pdf');
-  const j = await r.json();
-  document.getElementById('pdfres').textContent = j.ok ? ' ✔ creato (scarica sotto)' : ' ✖ errore';
-  if(j.ok){
-    // link download
-    const a = document.createElement('a');
-    a.href = '/download/report.pdf?ts=' + Date.now();
-    a.textContent = ' Scarica report.pdf';
-    a.style.marginLeft = '12px';
-    document.getElementById('pdfres').appendChild(a);
+  setText('pdfres', 'Generazione in corso…');
+  const r = await safeJson('/api/report/pdf');
+  if(r && r.ok){
+    setText('pdfres', '✅ PDF creato. Usa “Scarica report.pdf”.');
+    // cache bust download link
+    document.getElementById('dlBtn').href = "/download/report.pdf?ts=" + Date.now();
+  } else {
+    setText('pdfres', '❌ Errore generazione PDF.');
   }
 }
 
@@ -94,9 +325,15 @@ async function sendFeedback(){
   const score = document.getElementById('score').value.trim();
   const note = document.getElementById('note').value.trim();
   const url = `/api/feedback?day=${encodeURIComponent(day)}&score=${encodeURIComponent(score)}&note=${encodeURIComponent(note)}`;
-  const r = await fetch(url, {method:'POST'});
-  const j = await r.json();
-  document.getElementById('fbres').textContent = j.ok ? '✔ salvato' : ('✖ '+(j.error||'errore'));
+  const r = await safeJson(url);
+  const el = document.getElementById('fbres');
+  if(r && r.ok){
+    el.className = "ok";
+    el.textContent = "✔ salvato";
+  } else {
+    el.className = "err";
+    el.textContent = "✖ errore";
+  }
 }
 
 loadAll();
