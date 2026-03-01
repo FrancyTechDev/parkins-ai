@@ -1,11 +1,12 @@
+import os
 import time
 import pandas as pd
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse
-
 from fastapi.templating import Jinja2Templates
 
 from db import init_db, connect
+from demo_seed import seed_demo
 from baseline import recompute_baseline
 from aggregate import recompute_daily, recompute_weekly, recompute_monthly
 from forecast import forecast_72h
@@ -16,7 +17,16 @@ from config import TSI_SEVERE
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+
 init_db()
+
+if os.getenv("DEMO_MODE") == "1":
+    seed_demo(days=7, step_sec=10)
+
+
+REPORT_PATH = "/tmp/report.pdf" if os.getenv("RENDER") else "report.pdf"
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -44,7 +54,6 @@ def feedback(day: str, score: int, note: str = ""):
     )
     c.commit()
     c.close()
-
     return {"ok": True}
 
 
@@ -73,10 +82,10 @@ def get_prognosis():
 
 @app.get("/api/report/pdf")
 def report_pdf_generate():
-    generate_report_pdf("report.pdf")
+    generate_report_pdf(REPORT_PATH)
     return {"ok": True, "file": "report.pdf"}
 
 
 @app.get("/download/report.pdf")
 def download_report_pdf():
-    return FileResponse("report.pdf", media_type="application/pdf", filename="report.pdf")
+    return FileResponse(REPORT_PATH, media_type="application/pdf", filename="report.pdf")

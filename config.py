@@ -1,16 +1,32 @@
-DB_PATH = "db.sqlite"
+import os
 
-# Windows: "COM3"  |  Raspberry: "/dev/ttyACM0"
-SERIAL_PORT = "COM3"
-BAUD = 115200
 
-# Aggiornamenti
-BASELINE_DAYS = 7
-BASELINE_REFRESH_SEC = 600   # 10 min
-AGG_REFRESH_SEC = 300        # 5 min
-FORECAST_REFRESH_SEC = 900   # 15 min
+if os.getenv("RENDER"):
+    DEFAULT_DB = "/tmp/db.sqlite"
+else:
+    DEFAULT_DB = "db.sqlite"
 
-# Soglie indice (TSI)
-TSI_MED = 55
-TSI_HIGH = 70
-TSI_SEVERE = 85
+DB_PATH = os.getenv("DB_PATH", DEFAULT_DB)
+
+
+# Windows: "COM3"
+# Raspberry: "/dev/ttyACM0"
+
+SERIAL_PORT = os.getenv("SERIAL_PORT", "COM3")
+BAUD = int(os.getenv("BAUD", "115200"))
+
+
+# Se DEMO_MODE=1 genera dati simulati all'avvio
+DEMO_MODE = os.getenv("DEMO_MODE", "0") == "1"
+
+
+BASELINE_DAYS = int(os.getenv("BASELINE_DAYS", "7"))
+
+BASELINE_REFRESH_SEC = int(os.getenv("BASELINE_REFRESH_SEC", "600"))   # 10 min
+AGG_REFRESH_SEC = int(os.getenv("AGG_REFRESH_SEC", "300"))            # 5 min
+FORECAST_REFRESH_SEC = int(os.getenv("FORECAST_REFRESH_SEC", "900"))  # 15 min
+
+
+TSI_MED = int(os.getenv("TSI_MED", "55"))
+TSI_HIGH = int(os.getenv("TSI_HIGH", "70"))
+TSI_SEVERE = int(os.getenv("TSI_SEVERE", "85"))
