@@ -12,7 +12,7 @@ DB_PATH = os.getenv("DB_PATH", DEFAULT_DB)
 # Windows: "COM3"
 # Raspberry: "/dev/ttyACM0"
 
-SERIAL_PORT = os.getenv("SERIAL_PORT", "COM3")
+SERIAL_PORT = os.getenv("SERIAL_PORT", "/dev/ttyACM0")
 BAUD = int(os.getenv("BAUD", "115200"))
 
 
