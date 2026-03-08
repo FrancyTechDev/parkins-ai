@@ -4,7 +4,7 @@ import csv
 import io
 import pandas as pd
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
 
@@ -51,7 +51,20 @@ def state():
     return {"current": df.iloc[0].to_dict()}
 
 @app.post("/api/feedback")
-def feedback(day: str = Form(...), score: int = Form(...), note: str = Form("")):
+async def feedback(request: Request, day: str = None, score: int = None, note: str = ""):
+    # Support JSON body or query params without requiring python-multipart
+    if day is None or score is None:
+        try:
+            payload = await request.json()
+            day = payload.get("day", day)
+            score = payload.get("score", score)
+            note = payload.get("note", note)
+        except Exception:
+            pass
+
+    if day is None or score is None:
+        return {"ok": False, "error": "day and score required"}
+
     if score < 1 or score > 5:
         return {"ok": False, "error": "score must be 1..5"}
 
@@ -179,6 +192,17 @@ def series_forecasts(days: int = 30):
         "SELECT created_ts, horizon_h, pred, lo, hi, method "
         "FROM forecasts WHERE created_ts >= ? ORDER BY created_ts ASC",
         c, params=(since_ts,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/feedback")
+def series_feedback(days: int = 365):
+    since_day = (datetime.utcnow().date() - timedelta(days=int(days))).isoformat()
+    c = connect()
+    df = pd.read_sql(
+        "SELECT day, score, note FROM user_feedback WHERE day >= ? ORDER BY day ASC",
+        c, params=(since_day,)
     )
     c.close()
     return {"status": "ok", "rows": df.to_dict(orient="records")}
