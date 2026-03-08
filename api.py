@@ -65,6 +65,11 @@ async def feedback(request: Request, day: str = None, score: int = None, note: s
     if day is None or score is None:
         return {"ok": False, "error": "day and score required"}
 
+    try:
+        score = int(score)
+    except Exception:
+        return {"ok": False, "error": "score must be integer 1..5"}
+
     if score < 1 or score > 5:
         return {"ok": False, "error": "score must be 1..5"}
 
