@@ -367,9 +367,27 @@
       </div>
     </section>
 
-    <!-- PAGINA 10: DEBUG -->
+    <!-- PAGINA 10: REPORT PDF -->
     <section class="page">
-      <h3>Pagina 10 · Debug JSON (Raw ma leggibile)</h3>
+      <h3>Pagina 10 · Report PDF (Analisi clinica AI)</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>REPORT</h2>
+          <div class="row">
+            <button class="btn" onclick="genPDF()">Genera PDF</button>
+            <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+            <span class="muted" id="pdfres"></span>
+          </div>
+          <div class="sub" style="margin-top:10px">
+            Il PDF include la sezione “Prognosi e risposte alle domande essenziali (basata su TSI)”.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 11: DEBUG -->
+    <section class="page">
+      <h3>Pagina 11 · Debug JSON (Raw ma leggibile)</h3>
       <div class="card span-12">
         <h2>DEBUG JSON</h2>
         <details open>
