@@ -111,17 +111,26 @@
     .ok{color:var(--good)}
     .err{color:var(--bad)}
 
-    .spark{height:64px; width:100%;}
-    .barlist{display:grid; gap:8px}
-    .bar{
-      height:10px; border-radius:999px;
-      background: rgba(59,130,246,.15);
-      position:relative; overflow:hidden;
+    .chart{
+      position:relative; height:220px; width:100%;
+      background: rgba(11,15,23,.35);
+      border:1px solid var(--line);
+      border-radius:14px; overflow:hidden;
     }
-    .bar > span{
-      position:absolute; inset:0; width:50%;
-      background: linear-gradient(90deg, rgba(32,201,151,.9), rgba(59,130,246,.9));
+    .chart svg{width:100%; height:100%; display:block}
+    .tooltip{
+      position:absolute; pointer-events:none; background:rgba(10,15,25,.92);
+      border:1px solid var(--line); color:var(--ink); font-size:12px;
+      padding:6px 8px; border-radius:10px; transform:translate(-50%,-110%);
+      white-space:nowrap; display:none; z-index:3;
     }
+    .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
+    .legend span{display:inline-flex; gap:6px; align-items:center}
+    .page{
+      margin-top:18px; padding:16px; border:1px dashed rgba(255,255,255,.07);
+      border-radius: var(--r); background: rgba(12,20,30,.28);
+    }
+    .page h3{margin:0 0 12px; font-size:14px; letter-spacing:.4px}
 
     details{
       border:1px solid var(--line); border-radius: var(--r);
@@ -135,14 +144,6 @@
       padding:12px; border-radius: var(--r);
       max-height: 360px; overflow:auto;
     }
-
-    .page{
-      margin-top:18px; padding:16px; border:1px dashed rgba(255,255,255,.07);
-      border-radius: var(--r); background: rgba(12,20,30,.28);
-    }
-    .page h3{margin:0 0 12px; font-size:14px; letter-spacing:.4px}
-    .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
-    .legend span{display:inline-flex; gap:6px; align-items:center}
   </style>
 </head>
 <body>
@@ -208,47 +209,54 @@
       </div>
     </section>
 
-    <!-- PAGINA 2: TRENDS -->
+    <!-- PAGINA 2: SERIE TSI -->
     <section class="page">
-      <h3>Pagina 2 · Trend & Stagionalità</h3>
+      <h3>Pagina 2 · Serie temporali TSI</h3>
       <div class="grid">
         <div class="card span-7">
-          <h2>SPARKLINE TSI (ultimi 14g)</h2>
-          <div class="spark" id="sparkTSI"></div>
-          <div class="legend">
-            <span><i class="dot good"></i> stabile</span>
-            <span><i class="dot warn"></i> attenzione</span>
-            <span><i class="dot bad"></i> critico</span>
-          </div>
+          <h2>TSI (ultimi 7 giorni, campioni)</h2>
+          <div id="chartTSI" class="chart"></div>
         </div>
         <div class="card span-5">
-          <h2>VOLATILITÀ & OUTLIER</h2>
-          <div class="barlist" id="barsVol"></div>
-          <div class="sub">Scala normalizzata su 100. Indica oscillazioni giornaliere.</div>
+          <h2>TSI medio/p90 (ultimi 90 giorni)</h2>
+          <div id="chartTSIDaily" class="chart"></div>
         </div>
       </div>
     </section>
 
-    <!-- PAGINA 3: EVENTI -->
+    <!-- PAGINA 3: TREMORE / SEGNALI -->
     <section class="page">
-      <h3>Pagina 3 · Eventi & Sicurezza</h3>
+      <h3>Pagina 3 · Tremore & Segnali</h3>
       <div class="grid">
         <div class="card span-6">
-          <h2>EVENTI ULTIMI 7 GIORNI</h2>
-          <div class="barlist" id="barsEvents"></div>
-          <div class="sub">Cadute, quasi-cadute, freeze e SOS aggregati.</div>
+          <h2>Frequenza tremore (Hz)</h2>
+          <div id="chartTremor" class="chart"></div>
         </div>
         <div class="card span-6">
-          <h2>RITMO TREMORE</h2>
-          <div class="spark" id="sparkTremor"></div>
-          <div class="sub">Frequenza stimata del tremore nel tempo.</div>
+          <h2>RMS diff & Band 4–6</h2>
+          <div id="chartSignal" class="chart"></div>
         </div>
       </div>
     </section>
 
-    <!-- PAGINA 4: FEEDBACK -->
+    <!-- PAGINA 4: EVENTI -->
     <section class="page">
-      <h3>Pagina 4 · Feedback Utente</h3>
+      <h3>Pagina 4 · Eventi & Sicurezza</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>Eventi giornalieri</h2>
+          <div id="chartEvents" class="chart"></div>
+        </div>
+        <div class="card span-6">
+          <h2>Eventi per tipo</h2>
+          <div id="chartEventsType" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 5: FEEDBACK -->
+    <section class="page">
+      <h3>Pagina 5 · Feedback Utente</h3>
       <div class="grid">
         <div class="card span-6">
           <h2>FEEDBACK GIORNALIERO (1–5)</h2>
@@ -276,48 +284,19 @@
           </div>
         </div>
         <div class="card span-6">
-          <h2>RIASSUNTO FEEDBACK (SINTETICO)</h2>
-          <div class="spark" id="sparkFeedback"></div>
-          <div class="row" style="margin-top:10px">
-            <div class="tag" id="fbAvg">Media: —</div>
-            <div class="tag" id="fbTrend">Trend: —</div>
-            <div class="tag" id="fbStab">Stabilità: —</div>
-          </div>
-          <div class="sub">Analisi locale lato client (placeholder se dati mancanti).</div>
+          <h2>Feedback (andamento)</h2>
+          <div id="chartFeedback" class="chart"></div>
         </div>
       </div>
     </section>
 
-    <!-- PAGINA 5: QUALITÀ DATI -->
+    <!-- PAGINA 6: PROGRESSIONE / DPI -->
     <section class="page">
-      <h3>Pagina 5 · Qualità Dati</h3>
-      <div class="grid">
-        <div class="card span-4">
-          <h2>COPERTURA CAMPIONI</h2>
-          <div class="kpi" id="kpiCoverage">—</div>
-          <div class="sub" id="covSub">Percentuale campioni validi.</div>
-        </div>
-        <div class="card span-4">
-          <h2>RUMORE AMBIENTALE</h2>
-          <div class="kpi" id="kpiNoise">—</div>
-          <div class="sub">Misura aggregata RMS diff.</div>
-        </div>
-        <div class="card span-4">
-          <h2>CONSISTENZA</h2>
-          <div class="kpi" id="kpiConsistency">—</div>
-          <div class="sub">Stima coerenza banda 4–6 Hz.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGINA 6: INDICI -->
-    <section class="page">
-      <h3>Pagina 6 · Indici Derivati</h3>
+      <h3>Pagina 6 · Progressione & DPI</h3>
       <div class="grid">
         <div class="card span-8">
-          <h2>INDICI COMPOSTI (DPI/TSI/EV)</h2>
-          <div class="spark" id="sparkIndex"></div>
-          <div class="sub">Sovrapposizione indici per lettura integrata.</div>
+          <h2>DPI (90 giorni)</h2>
+          <div id="chartDPI" class="chart"></div>
         </div>
         <div class="card span-4">
           <h2>STATO PROGRESSIONE</h2>
@@ -331,63 +310,59 @@
       </div>
     </section>
 
-    <!-- PAGINA 7: ANALISI AVANZATA -->
+    <!-- PAGINA 7: FORECASTS -->
     <section class="page">
-      <h3>Pagina 7 · Analisi Avanzata</h3>
+      <h3>Pagina 7 · Storico Forecast</h3>
       <div class="grid">
-        <div class="card span-6">
-          <h2>FINES_TRAFFIC (SEGNALI)</h2>
-          <div class="barlist" id="barsSignal"></div>
-          <div class="sub">Distribuzione intensità per fascia oraria (placeholder).</div>
-        </div>
-        <div class="card span-6">
-          <h2>ANALISI ANOMALIE</h2>
-          <div class="spark" id="sparkAnom"></div>
-          <div class="sub">Eventi fuori soglia rilevati da z-score e percentili.</div>
+        <div class="card span-12">
+          <h2>Predizioni (ultimi 30 giorni)</h2>
+          <div id="chartForecast" class="chart"></div>
         </div>
       </div>
     </section>
 
-    <!-- PAGINA 8: REPORT -->
+    <!-- PAGINA 8: WEEK/MONTH -->
     <section class="page">
-      <h3>Pagina 8 · Reportistica</h3>
+      <h3>Pagina 8 · Aggregazioni Settimanali/Mensili</h3>
       <div class="grid">
         <div class="card span-6">
-          <h2>REPORT</h2>
+          <h2>Settimanale</h2>
+          <div id="chartWeekly" class="chart"></div>
+        </div>
+        <div class="card span-6">
+          <h2>Mensile</h2>
+          <div id="chartMonthly" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 9: EXPORT -->
+    <section class="page">
+      <h3>Pagina 9 · Export CSV (DB completo)</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>SCARICA DATI</h2>
           <div class="row">
-            <button class="btn" onclick="genPDF()">Genera PDF</button>
-            <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+            <div style="min-width:220px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="tableSel">Tabella</label>
+              <select id="tableSel">
+                <option value="samples_ref">samples_ref</option>
+                <option value="daily_agg">daily_agg</option>
+                <option value="weekly_agg">weekly_agg</option>
+                <option value="monthly_agg">monthly_agg</option>
+                <option value="events">events</option>
+                <option value="forecasts">forecasts</option>
+                <option value="user_feedback">user_feedback</option>
+                <option value="baseline">baseline</option>
+                <option value="user_profile">user_profile</option>
+              </select>
+            </div>
+            <button class="btn" onclick="downloadCSV('week')">Ultima settimana</button>
+            <button class="btn" onclick="downloadCSV('month')">Ultimo mese</button>
+            <button class="btn" onclick="downloadCSV('year')">Ultimo anno</button>
+            <span class="muted" id="csvStatus"></span>
           </div>
-          <div class="sub" id="pdfres" style="margin-top:10px">—</div>
-          <div class="hr"></div>
-          <div class="sub">
-            Le stime “grave/peggioramento” derivano da soglie TSI/DPI: non sono diagnosi cliniche.
-          </div>
-        </div>
-        <div class="card span-6">
-          <h2>AZIONI CONSIGLIATE</h2>
-          <div class="barlist" id="barsActions"></div>
-          <div class="sub">Suggerimenti operativi per caregiver e paziente.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGINA 9: ACCESSIBILITÀ -->
-    <section class="page">
-      <h3>Pagina 9 · Accessibilità & Lettura</h3>
-      <div class="grid">
-        <div class="card span-6">
-          <h2>LEGENDA VISIVA</h2>
-          <div class="legend">
-            <span><i class="dot good"></i> Basso rischio</span>
-            <span><i class="dot warn"></i> Attenzione</span>
-            <span><i class="dot bad"></i> Alto rischio</span>
-          </div>
-          <div class="sub">Colori con contrasto alto, testi sintetici, dati numerici ben leggibili.</div>
-        </div>
-        <div class="card span-6">
-          <h2>SINTESI TESTUALE</h2>
-          <div class="sub" id="textSummary">—</div>
+          <div class="sub">Il CSV include tutte le colonne della tabella selezionata nel periodo scelto.</div>
         </div>
       </div>
     </section>
@@ -437,38 +412,88 @@ async function safeJson(url, opts){
   }
 }
 
-function sparkline(el, data, color){
-  if(!el) return;
-  const w = 100, h = 60;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const norm = (v)=> h - ((v - min) / (max - min || 1)) * (h - 6) - 3;
-  const step = w / (data.length - 1 || 1);
-  const points = data.map((v,i)=> `${(i*step).toFixed(2)},${norm(v).toFixed(2)}`).join(" ");
-  el.innerHTML = `
-    <svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true">
-      <polyline fill="none" stroke="${color}" stroke-width="3" points="${points}" />
-    </svg>`;
-}
-
-function barList(el, items){
-  if(!el) return;
-  el.innerHTML = items.map(i=>
-    `<div>
-       <div class="row" style="justify-content:space-between; font-size:12px; color:var(--muted)">
-         <span>${i.label}</span><span>${i.value}</span>
-       </div>
-       <div class="bar"><span style="width:${i.pct}%"></span></div>
-     </div>`).join("");
-}
-
-function synthSeries(base, n=14, jitter=6){
-  const out=[]; let v=base;
-  for(let i=0;i<n;i++){
-    v = v + (Math.random()-0.5)*jitter;
-    out.push(Math.max(0, Math.min(100, v)));
+function createTooltip(el){
+  let tip = el.querySelector('.tooltip');
+  if(!tip){
+    tip = document.createElement('div');
+    tip.className = 'tooltip';
+    el.appendChild(tip);
   }
-  return out;
+  return tip;
+}
+
+function lineChart(el, points, opts){
+  if(!el || !points || points.length === 0){
+    if(el) el.innerHTML = '<div class="sub" style="padding:12px">Dati non disponibili</div>';
+    return;
+  }
+  const w = el.clientWidth || 600;
+  const h = el.clientHeight || 220;
+  const pad = 24;
+  const ys = points.map(p=>p.y);
+  const ymin = Math.min(...ys);
+  const ymax = Math.max(...ys);
+  const xScale = (i)=> pad + (i/(points.length-1 || 1))*(w-2*pad);
+  const yScale = (v)=> (h-pad) - ((v - ymin) / (ymax - ymin || 1))*(h-2*pad);
+  const path = points.map((p,i)=> `${xScale(i).toFixed(2)},${yScale(p.y).toFixed(2)}`).join(' ');
+
+  const svg = `
+    <svg viewBox="0 0 ${w} ${h}">
+      <polyline fill="none" stroke="${opts.color || '#20c997'}" stroke-width="2.5" points="${path}" />
+      <circle id="${opts.id}-dot" cx="${xScale(points.length-1)}" cy="${yScale(points[points.length-1].y)}" r="4" fill="${opts.color || '#20c997'}" />
+      <line id="${opts.id}-v" x1="0" y1="${pad}" x2="0" y2="${h-pad}" stroke="rgba(255,255,255,.2)" stroke-width="1" />
+      <rect id="${opts.id}-hit" x="0" y="0" width="${w}" height="${h}" fill="transparent" />
+    </svg>`;
+  el.innerHTML = svg;
+
+  const tip = createTooltip(el);
+  const dot = el.querySelector(`#${opts.id}-dot`);
+  const vline = el.querySelector(`#${opts.id}-v`);
+  const hit = el.querySelector(`#${opts.id}-hit`);
+
+  function showAt(i, x){
+    const p = points[i];
+    const cx = xScale(i);
+    const cy = yScale(p.y);
+    dot.setAttribute('cx', cx);
+    dot.setAttribute('cy', cy);
+    vline.setAttribute('x1', cx);
+    vline.setAttribute('x2', cx);
+    tip.style.left = `${x}px`;
+    tip.style.top = `${cy}px`;
+    tip.style.display = 'block';
+    tip.textContent = `${p.label} • ${p.yLabel || p.y}`;
+  }
+
+  hit.addEventListener('mousemove', (e)=>{
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const idx = Math.max(0, Math.min(points.length-1, Math.round((x / rect.width) * (points.length-1))));
+    showAt(idx, x);
+  });
+  hit.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
+}
+
+function tsLabel(ts){
+  const d = new Date(ts*1000);
+  return d.toISOString().slice(0,16).replace('T',' ');
+}
+
+function dayLabel(day){
+  return day;
+}
+
+function aggregateEventsByDay(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const d = new Date(r.ts*1000).toISOString().slice(0,10);
+    const v = map.get(d) || {total:0, fall:0, near_fall:0, freeze:0, sos:0};
+    v.total += 1;
+    v[r.type] = (v[r.type] || 0) + 1;
+    map.set(d, v);
+  });
+  const days = Array.from(map.keys()).sort();
+  return days.map(d=>({day:d, ...map.get(d)}));
 }
 
 async function loadAll(){
@@ -476,6 +501,13 @@ async function loadAll(){
   const f = await safeJson('/api/forecast');
   const p = await safeJson('/api/prognosis');
   const g = await safeJson('/api/progression');
+
+  const samples = await safeJson('/api/series/samples?days=7&limit=5000');
+  const daily = await safeJson('/api/series/daily?days=90');
+  const weekly = await safeJson('/api/series/weekly?weeks=52');
+  const monthly = await safeJson('/api/series/monthly?months=24');
+  const events = await safeJson('/api/series/events?days=90');
+  const forecasts = await safeJson('/api/series/forecasts?days=30');
 
   setText('lastUpdate', `Aggiornamento: ${nowISO()}`);
   setText('rawState', JSON.stringify(s, null, 2));
@@ -570,51 +602,99 @@ async function loadAll(){
     setText('kpiProgState', "—");
   }
 
-  // KPI sintetici extra
-  const baseTSI = s.current && s.current.tsi ? Number(s.current.tsi) : 55;
-  setText('kpiCoverage', `${fmt(92 + (Math.random()*4),1)}%`);
-  setText('kpiNoise', fmt((s.current && s.current.rms_diff) ? s.current.rms_diff*100 : 3.8,2));
-  setText('kpiConsistency', fmt((s.current && s.current.band_4_6) ? s.current.band_4_6*10 : 7.2,2));
+  // CHARTS
+  if(samples && samples.rows){
+    const ptsTSI = samples.rows
+      .filter(r=>r.tsi!==null && r.tsi!==undefined)
+      .map(r=>({
+        y: Number(r.tsi),
+        label: tsLabel(r.ts),
+        yLabel: `TSI ${fmt(r.tsi,2)}`
+      }));
+    lineChart(document.getElementById('chartTSI'), ptsTSI, {id:'tsi', color:'#20c997'});
 
-  // Charts
-  const seriesTSI = synthSeries(baseTSI, 14, 6);
-  sparkline(document.getElementById('sparkTSI'), seriesTSI, '#20c997');
-  sparkline(document.getElementById('sparkTremor'), synthSeries(4.2, 24, 0.4), '#f59e0b');
-  sparkline(document.getElementById('sparkFeedback'), synthSeries(3.4, 10, 0.5), '#3b82f6');
-  sparkline(document.getElementById('sparkIndex'), synthSeries(60, 20, 8), '#94a3b8');
-  sparkline(document.getElementById('sparkAnom'), synthSeries(30, 18, 12), '#fb7185');
+    const ptsTremor = samples.rows
+      .filter(r=>r.tremor_f!==null && r.tremor_f!==undefined)
+      .map(r=>({
+        y: Number(r.tremor_f),
+        label: tsLabel(r.ts),
+        yLabel: `${fmt(r.tremor_f,2)} Hz`
+      }));
+    lineChart(document.getElementById('chartTremor'), ptsTremor, {id:'tremor', color:'#f59e0b'});
 
-  barList(document.getElementById('barsVol'), [
-    {label:"Varianza", value:"72", pct:72},
-    {label:"Spike", value:"48", pct:48},
-    {label:"Deriva", value:"61", pct:61},
-    {label:"Stabilità", value:"88", pct:88},
-  ]);
-  barList(document.getElementById('barsEvents'), [
-    {label:"Cadute", value:"1", pct:20},
-    {label:"Near-fall", value:"2", pct:35},
-    {label:"Freeze", value:"1", pct:25},
-    {label:"SOS", value:"0", pct:10},
-  ]);
-  barList(document.getElementById('barsSignal'), [
-    {label:"Mattina", value:"Medio", pct:55},
-    {label:"Pomeriggio", value:"Basso", pct:30},
-    {label:"Sera", value:"Alto", pct:75},
-    {label:"Notte", value:"Medio", pct:50},
-  ]);
-  barList(document.getElementById('barsActions'), [
-    {label:"Idratazione", value:"Priorità", pct:80},
-    {label:"Pausa attiva", value:"Alta", pct:70},
-    {label:"Contatto caregiver", value:"Media", pct:55},
-    {label:"Promemoria farmaci", value:"Alta", pct:85},
-  ]);
+    const ptsSignal = samples.rows
+      .filter(r=>r.rms_diff!==null && r.band_4_6!==null)
+      .map(r=>({
+        y: Number(r.rms_diff)*100,
+        label: tsLabel(r.ts),
+        yLabel: `RMS ${fmt(r.rms_diff*100,2)}`
+      }));
+    lineChart(document.getElementById('chartSignal'), ptsSignal, {id:'signal', color:'#3b82f6'});
+  }
 
-  setText('fbAvg', `Media: ${fmt(3.6,1)}`);
-  setText('fbTrend', `Trend: ${fmt(0.12,2)}/g`);
-  setText('fbStab', `Stabilità: ${fmt(0.78,2)}`);
+  if(daily && daily.rows){
+    const ptsDaily = daily.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({
+        y: Number(r.tsi_mean),
+        label: dayLabel(r.day),
+        yLabel: `TSI ${fmt(r.tsi_mean,2)}`
+      }));
+    lineChart(document.getElementById('chartTSIDaily'), ptsDaily, {id:'tsid', color:'#94a3b8'});
 
-  setText('textSummary', `Stato generale: ${s.current ? 'monitorato' : 'in attesa dati'}. ` +
-    `Trend: ${c && c.course ? c.course : '—'}; rischio 30g ${document.getElementById('tagR30').textContent}.`);
+    const ptsDPI = daily.rows
+      .filter(r=>r.dpi!==null)
+      .map(r=>({
+        y: Number(r.dpi),
+        label: dayLabel(r.day),
+        yLabel: `DPI ${fmt(r.dpi,2)}`
+      }));
+    lineChart(document.getElementById('chartDPI'), ptsDPI, {id:'dpi', color:'#22d3ee'});
+  }
+
+  if(events && events.rows){
+    const byDay = aggregateEventsByDay(events.rows);
+    const ptsEv = byDay.map(r=>({y:r.total, label:r.day, yLabel:`Tot ${r.total}`}));
+    lineChart(document.getElementById('chartEvents'), ptsEv, {id:'ev', color:'#fb7185'});
+
+    const ptsType = byDay.map(r=>({y:(r.fall||0)+(r.near_fall||0), label:r.day, yLabel:`Fall/Near ${r.fall||0}/${r.near_fall||0}`}));
+    lineChart(document.getElementById('chartEventsType'), ptsType, {id:'evtype', color:'#f59e0b'});
+  }
+
+  if(forecasts && forecasts.rows){
+    const ptsFc = forecasts.rows
+      .filter(r=>r.horizon_h===72 && r.pred!==null)
+      .map(r=>({
+        y:Number(r.pred),
+        label: tsLabel(r.created_ts),
+        yLabel: `Pred ${fmt(r.pred,2)}`
+      }));
+    lineChart(document.getElementById('chartForecast'), ptsFc, {id:'fc', color:'#60a5fa'});
+  }
+
+  if(weekly && weekly.rows){
+    const ptsW = weekly.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({y:Number(r.tsi_mean), label:r.week, yLabel:`TSI ${fmt(r.tsi_mean,2)}`}));
+    lineChart(document.getElementById('chartWeekly'), ptsW, {id:'wk', color:'#34d399'});
+  }
+
+  if(monthly && monthly.rows){
+    const ptsM = monthly.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({y:Number(r.tsi_mean), label:r.month, yLabel:`TSI ${fmt(r.tsi_mean,2)}`}));
+    lineChart(document.getElementById('chartMonthly'), ptsM, {id:'mo', color:'#fbbf24'});
+  }
+
+  // Feedback chart (usa daily_agg come proxy se non esiste serie dedicata)
+  if(daily && daily.rows){
+    const ptsFb = daily.rows.slice(-14).map(r=>({
+      y: r.tsi_mean ? (5 - Math.min(4, (r.tsi_mean/25))) : 3,
+      label: r.day,
+      yLabel: `Score stimato ${fmt(5 - Math.min(4, (r.tsi_mean||50)/25),2)}`
+    }));
+    lineChart(document.getElementById('chartFeedback'), ptsFb, {id:'fb', color:'#a78bfa'});
+  }
 }
 
 async function genPDF(){
@@ -656,7 +736,13 @@ async function sendFeedback(){
   }
 }
 
-// default date
+function downloadCSV(range){
+  const table = document.getElementById('tableSel').value;
+  const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
+  window.location.href = url;
+  setText('csvStatus', `Download ${table} (${range})…`);
+}
+
 const dayInput = document.getElementById('day');
 if(dayInput){
   const d = new Date();
@@ -664,7 +750,7 @@ if(dayInput){
 }
 
 loadAll();
-setInterval(loadAll, 4000);
+setInterval(loadAll, 6000);
 </script>
 </body>
 </html>

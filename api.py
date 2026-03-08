@@ -1,8 +1,11 @@
 import os
 import time
+import csv
+import io
 import pandas as pd
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, FileResponse
+from datetime import datetime, timedelta
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from db import init_db, connect
@@ -48,7 +51,7 @@ def state():
     return {"current": df.iloc[0].to_dict()}
 
 @app.post("/api/feedback")
-def feedback(day: str, score: int, note: str = ""):
+def feedback(day: str = Form(...), score: int = Form(...), note: str = Form("")):
     if score < 1 or score > 5:
         return {"ok": False, "error": "score must be 1..5"}
 
@@ -106,3 +109,120 @@ def report_pdf_generate():
 @app.get("/download/report.pdf")
 def download_report_pdf():
     return FileResponse(REPORT_PATH, media_type="application/pdf", filename="report.pdf")
+
+# ---- Series APIs (per grafici) ----
+@app.get("/api/series/samples")
+def series_samples(days: int = 7, limit: int = 5000):
+    since_ts = int(time.time()) - int(days) * 86400
+    c = connect()
+    df = pd.read_sql(
+        "SELECT ts, tsi, tremor_f, rms_diff, band_4_6, peaks, gsr, batt, qf "
+        "FROM samples_ref WHERE ts >= ? ORDER BY ts ASC LIMIT ?",
+        c, params=(since_ts, limit)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/daily")
+def series_daily(days: int = 90):
+    since_day = (datetime.utcnow().date() - timedelta(days=int(days))).isoformat()
+    c = connect()
+    df = pd.read_sql(
+        "SELECT day, tsi_mean, tsi_p90, tremor_minutes, sample_count, "
+        "falls, near_falls, freezes, sos, dpi "
+        "FROM daily_agg WHERE day >= ? ORDER BY day ASC",
+        c, params=(since_day,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/weekly")
+def series_weekly(weeks: int = 52):
+    since_ts = int(time.time()) - int(weeks) * 7 * 86400
+    c = connect()
+    df = pd.read_sql(
+        "SELECT week, tsi_mean, tsi_trend, high_days, updated_ts "
+        "FROM weekly_agg WHERE updated_ts >= ? ORDER BY week ASC",
+        c, params=(since_ts,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/monthly")
+def series_monthly(months: int = 24):
+    since_ts = int(time.time()) - int(months) * 30 * 86400
+    c = connect()
+    df = pd.read_sql(
+        "SELECT month, tsi_mean, tsi_trend, updated_ts "
+        "FROM monthly_agg WHERE updated_ts >= ? ORDER BY month ASC",
+        c, params=(since_ts,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/events")
+def series_events(days: int = 90):
+    since_ts = int(time.time()) - int(days) * 86400
+    c = connect()
+    df = pd.read_sql(
+        "SELECT ts, type, severity, meta FROM events WHERE ts >= ? ORDER BY ts ASC",
+        c, params=(since_ts,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+@app.get("/api/series/forecasts")
+def series_forecasts(days: int = 30):
+    since_ts = int(time.time()) - int(days) * 86400
+    c = connect()
+    df = pd.read_sql(
+        "SELECT created_ts, horizon_h, pred, lo, hi, method "
+        "FROM forecasts WHERE created_ts >= ? ORDER BY created_ts ASC",
+        c, params=(since_ts,)
+    )
+    c.close()
+    return {"status": "ok", "rows": df.to_dict(orient="records")}
+
+# ---- CSV Export ----
+TABLES = {
+    "samples_ref": {"ts_col": "ts", "type": "ts"},
+    "events": {"ts_col": "ts", "type": "ts"},
+    "forecasts": {"ts_col": "created_ts", "type": "ts"},
+    "daily_agg": {"ts_col": "day", "type": "day"},
+    "weekly_agg": {"ts_col": "updated_ts", "type": "ts"},
+    "monthly_agg": {"ts_col": "updated_ts", "type": "ts"},
+    "user_feedback": {"ts_col": "day", "type": "day"},
+    "baseline": {"ts_col": "updated_ts", "type": "ts"},
+    "user_profile": {"ts_col": "updated_ts", "type": "ts"},
+}
+
+@app.get("/api/export")
+def export_csv(table: str, range: str = "week"):
+    if table not in TABLES:
+        return {"ok": False, "error": "invalid table"}
+    days = {"week": 7, "month": 30, "year": 365}.get(range, 7)
+
+    cfg = TABLES[table]
+    c = connect()
+    cur = c.cursor()
+
+    if cfg["type"] == "ts":
+        since_ts = int(time.time()) - days * 86400
+        cur.execute(f"SELECT * FROM {table} WHERE {cfg['ts_col']} >= ? ORDER BY {cfg['ts_col']} ASC", (since_ts,))
+    else:
+        since_day = (datetime.utcnow().date() - timedelta(days=days)).isoformat()
+        cur.execute(f"SELECT * FROM {table} WHERE {cfg['ts_col']} >= ? ORDER BY {cfg['ts_col']} ASC", (since_day,))
+
+    rows = cur.fetchall()
+    headers = [d[0] for d in cur.description] if cur.description else []
+    c.close()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(headers)
+    writer.writerows(rows)
+    content = buf.getvalue()
+
+    filename = f"{table}_{range}.csv"
+    return Response(content, media_type="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename={filename}"})
