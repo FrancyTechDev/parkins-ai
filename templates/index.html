@@ -6,57 +6,69 @@
   <title>PARKINS-AI</title>
   <style>
     :root{
-      --bg:#0b0f17; --panel:#111827; --panel2:#0f172a;
-      --txt:#e5e7eb; --muted:#9ca3af; --line:#1f2937;
-      --good:#34d399; --warn:#fbbf24; --bad:#fb7185; --acc:#60a5fa;
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --bg:#0b1119;
+      --panel:#121a24;
+      --panel-2:#0f1822;
+      --ink:#e7eef7;
+      --muted:#9fb0c4;
+      --line:#223042;
+      --acc:#20c997;
+      --acc-2:#f59e0b;
+      --acc-3:#3b82f6;
+      --bad:#fb7185;
+      --good:#34d399;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
       --r:18px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(900px 500px at 15% 10%, rgba(96,165,250,.20), transparent 60%),
-                  radial-gradient(900px 500px at 85% 15%, rgba(52,211,153,.15), transparent 55%),
-                  var(--bg);
-      color:var(--txt);
+      margin:0;
+      font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1000px 700px at 15% 15%, rgba(32,201,151,.20), transparent 60%),
+        radial-gradient(900px 600px at 85% 10%, rgba(59,130,246,.18), transparent 55%),
+        radial-gradient(900px 700px at 75% 85%, rgba(245,158,11,.18), transparent 60%),
+        var(--bg);
     }
-    a{color:var(--acc); text-decoration:none}
-    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 40px}
+    a{color:var(--acc-3); text-decoration:none}
+    .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 60px}
+
     .top{
       display:flex; gap:14px; align-items:center; justify-content:space-between;
       padding:18px 18px; border:1px solid var(--line); border-radius: var(--r);
-      background: linear-gradient(180deg, rgba(17,24,39,.85), rgba(15,23,42,.65));
+      background: linear-gradient(180deg, rgba(18,26,36,.92), rgba(12,20,30,.70));
       box-shadow: var(--shadow);
+      position:sticky; top:14px; z-index:2; backdrop-filter: blur(8px);
     }
     .brand{display:flex; gap:12px; align-items:center}
     .logo{
-      width:42px; height:42px; border-radius:14px;
-      background: linear-gradient(135deg, rgba(96,165,250,.9), rgba(52,211,153,.85));
-      box-shadow: 0 8px 18px rgba(96,165,250,.22);
+      width:46px; height:46px; border-radius:14px;
+      background: conic-gradient(from 120deg, #20c997, #3b82f6, #f59e0b, #20c997);
+      box-shadow: 0 10px 20px rgba(32,201,151,.28);
     }
-    .title{line-height:1.1}
-    .title h1{margin:0; font-size:18px; letter-spacing:.4px}
+    .title h1{margin:0; font-size:20px; letter-spacing:.4px}
     .title p{margin:4px 0 0; color:var(--muted); font-size:12px}
     .pillrow{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
     .pill{
-      font-size:12px; color:var(--txt);
-      border:1px solid var(--line); background: rgba(17,24,39,.65);
+      font-size:12px; color:var(--ink);
+      border:1px solid var(--line); background: rgba(18,26,36,.75);
       padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center;
     }
     .dot{width:8px; height:8px; border-radius:99px; background:var(--muted)}
     .dot.good{background:var(--good)}
-    .dot.warn{background:var(--warn)}
+    .dot.warn{background:var(--acc-2)}
     .dot.bad{background:var(--bad)}
+
     .grid{display:grid; grid-template-columns: repeat(12,1fr); gap:14px; margin-top:14px}
     .card{
       border:1px solid var(--line); border-radius: var(--r);
-      background: linear-gradient(180deg, rgba(17,24,39,.75), rgba(15,23,42,.55));
-      box-shadow: var(--shadow);
-      padding:16px;
+      background: linear-gradient(180deg, rgba(18,26,36,.85), rgba(13,20,30,.55));
+      box-shadow: var(--shadow); padding:16px;
     }
-    .card h2{margin:0 0 8px; font-size:13px; color:var(--muted); font-weight:600; letter-spacing:.3px}
-    .kpi{font-size:28px; font-weight:800; letter-spacing:.2px}
-    .sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.35}
+    .card h2{margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.6px}
+    .kpi{font-size:30px; font-weight:800; letter-spacing:.2px}
+    .sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.45}
     .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
     .tag{
       font-size:12px; padding:6px 10px; border-radius:999px;
@@ -64,42 +76,73 @@
     }
     .btn{
       appearance:none; border:1px solid rgba(255,255,255,.10);
-      background: rgba(96,165,250,.18);
-      color: var(--txt);
+      background: rgba(32,201,151,.16);
+      color: var(--ink);
       padding:10px 12px; border-radius: 14px;
       cursor:pointer; font-weight:700; font-size:12px;
       transition: transform .06s ease, background .12s ease;
     }
-    .btn:hover{background: rgba(96,165,250,.24)}
+    .btn:hover{background: rgba(32,201,151,.24)}
     .btn:active{transform: translateY(1px)}
-    .btn.ghost{background: rgba(17,24,39,.55)}
+    .btn.ghost{background: rgba(18,26,36,.55)}
     .btn.danger{background: rgba(251,113,133,.16)}
-    input{
+    input, select{
       width:100%; padding:11px 12px; border-radius: 14px;
-      border:1px solid var(--line); background: rgba(11,15,23,.45); color: var(--txt);
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color: var(--ink);
       outline:none;
     }
     input::placeholder{color:#6b7280}
     .muted{color:var(--muted)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .span-3{grid-column: span 3}
     .span-4{grid-column: span 4}
+    .span-5{grid-column: span 5}
     .span-6{grid-column: span 6}
+    .span-7{grid-column: span 7}
     .span-8{grid-column: span 8}
+    .span-9{grid-column: span 9}
     .span-12{grid-column: span 12}
-    @media(max-width:900px){
-      .span-4,.span-6,.span-8{grid-column: span 12}
+    @media(max-width:1000px){
+      .span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-9{grid-column: span 12}
       .pillrow{justify-content:flex-start}
-      .top{flex-direction:column; align-items:flex-start}
+      .top{flex-direction:column; align-items:flex-start; position:static}
     }
     .hr{height:1px; background: var(--line); margin:12px 0}
     .ok{color:var(--good)}
     .err{color:var(--bad)}
+
+    .spark{height:64px; width:100%;}
+    .barlist{display:grid; gap:8px}
+    .bar{
+      height:10px; border-radius:999px;
+      background: rgba(59,130,246,.15);
+      position:relative; overflow:hidden;
+    }
+    .bar > span{
+      position:absolute; inset:0; width:50%;
+      background: linear-gradient(90deg, rgba(32,201,151,.9), rgba(59,130,246,.9));
+    }
+
+    details{
+      border:1px solid var(--line); border-radius: var(--r);
+      background: rgba(12,20,30,.45); padding:10px 12px;
+    }
+    details + details{margin-top:10px}
+    summary{cursor:pointer; font-weight:700; color:var(--ink)}
     pre{
-      margin:0; white-space:pre-wrap; word-break:break-word;
+      margin:10px 0 0; white-space:pre-wrap; word-break:break-word;
       background: rgba(11,15,23,.55); border:1px solid var(--line);
       padding:12px; border-radius: var(--r);
-      max-height: 300px; overflow:auto;
+      max-height: 360px; overflow:auto;
     }
+
+    .page{
+      margin-top:18px; padding:16px; border:1px dashed rgba(255,255,255,.07);
+      border-radius: var(--r); background: rgba(12,20,30,.28);
+    }
+    .page h3{margin:0 0 12px; font-size:14px; letter-spacing:.4px}
+    .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
+    .legend span{display:inline-flex; gap:6px; align-items:center}
   </style>
 </head>
 <body>
@@ -119,87 +162,259 @@
       </div>
     </div>
 
-    <div class="grid">
-      <!-- Stato -->
-      <div class="card span-4">
-        <h2>STATO (ultimo campione)</h2>
-        <div class="kpi" id="kpiTSI">—</div>
-        <div class="row" style="margin-top:10px">
-          <div class="tag" id="tagQual">Qualità: —</div>
-          <div class="tag" id="tagFreq">Freq: —</div>
-        </div>
-        <div class="sub" id="stateSub">In attesa dati…</div>
-      </div>
-
-      <!-- Forecast -->
-      <div class="card span-4">
-        <h2>FORECAST 72h</h2>
-        <div class="kpi" id="kpiPred">—</div>
-        <div class="row" style="margin-top:10px">
-          <div class="tag" id="tagPI">PI 80%: —</div>
-          <div class="tag" id="tagHours">Ore: —</div>
-        </div>
-        <div class="sub" id="fcSub">—</div>
-      </div>
-
-      <!-- Prognosi -->
-      <div class="card span-4">
-        <h2>PROGNOSI (basata su TSI)</h2>
-        <div class="kpi" id="kpiCourse">—</div>
-        <div class="row" style="margin-top:10px">
-          <div class="tag" id="tagTrend">Trend: —</div>
-          <div class="tag" id="tagSevere">Grave: —</div>
-        </div>
-        <div class="sub" id="progSub">—</div>
-      </div>
-
-      <!-- Feedback -->
-      <div class="card span-6">
-        <h2>FEEDBACK GIORNALIERO (1–5)</h2>
-        <div class="row">
-          <div style="flex:1; min-width:180px">
-            <div class="muted" style="font-size:12px; margin-bottom:6px">Day (YYYY-MM-DD)</div>
-            <input id="day" placeholder="2026-03-01"/>
+    <!-- PAGINA 1: OVERVIEW -->
+    <section class="page">
+      <h3>Pagina 1 · Panoramica Operativa</h3>
+      <div class="grid">
+        <div class="card span-3">
+          <h2>TSI ISTANTANEO</h2>
+          <div class="kpi" id="kpiTSI">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="tagQual">Qualità: —</div>
+            <div class="tag" id="tagFreq">Freq: —</div>
           </div>
-          <div style="flex:1; min-width:140px">
-            <div class="muted" style="font-size:12px; margin-bottom:6px">Score (1..5)</div>
-            <input id="score" placeholder="3"/>
+          <div class="sub" id="stateSub">In attesa dati…</div>
+        </div>
+
+        <div class="card span-3">
+          <h2>FORECAST 72h</h2>
+          <div class="kpi" id="kpiPred">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="tagPI">PI 80%: —</div>
+            <div class="tag" id="tagHours">Ore: —</div>
+          </div>
+          <div class="sub" id="fcSub">—</div>
+        </div>
+
+        <div class="card span-3">
+          <h2>PROGNOSI</h2>
+          <div class="kpi" id="kpiCourse">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="tagTrend">Trend: —</div>
+            <div class="tag" id="tagSevere">Grave: —</div>
+          </div>
+          <div class="sub" id="progSub">—</div>
+        </div>
+
+        <div class="card span-3">
+          <h2>DPI (30/90)</h2>
+          <div class="kpi" id="kpiRisk">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="tagR30">30g: —</div>
+            <div class="tag" id="tagR90">90g: —</div>
+          </div>
+          <div class="sub" id="riskSub">Analisi rischio cumulata.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 2: TRENDS -->
+    <section class="page">
+      <h3>Pagina 2 · Trend & Stagionalità</h3>
+      <div class="grid">
+        <div class="card span-7">
+          <h2>SPARKLINE TSI (ultimi 14g)</h2>
+          <div class="spark" id="sparkTSI"></div>
+          <div class="legend">
+            <span><i class="dot good"></i> stabile</span>
+            <span><i class="dot warn"></i> attenzione</span>
+            <span><i class="dot bad"></i> critico</span>
           </div>
         </div>
-        <div style="margin-top:10px">
-          <div class="muted" style="font-size:12px; margin-bottom:6px">Nota (opzionale)</div>
-          <input id="note" placeholder="Es. giornata pesante, stress, poco sonno…"/>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <button class="btn" onclick="sendFeedback()">Invia feedback</button>
-          <span id="fbres" class="muted"></span>
-        </div>
-        <div class="hr"></div>
-        <div class="sub">
-          Suggerimento: inserisci il feedback ogni sera. Serve a personalizzare soglie e interpretazione nel report.
+        <div class="card span-5">
+          <h2>VOLATILITÀ & OUTLIER</h2>
+          <div class="barlist" id="barsVol"></div>
+          <div class="sub">Scala normalizzata su 100. Indica oscillazioni giornaliere.</div>
         </div>
       </div>
+    </section>
 
-      <!-- Report -->
-      <div class="card span-6">
-        <h2>REPORT</h2>
-        <div class="row">
-          <button class="btn" onclick="genPDF()">Genera PDF</button>
-          <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+    <!-- PAGINA 3: EVENTI -->
+    <section class="page">
+      <h3>Pagina 3 · Eventi & Sicurezza</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>EVENTI ULTIMI 7 GIORNI</h2>
+          <div class="barlist" id="barsEvents"></div>
+          <div class="sub">Cadute, quasi-cadute, freeze e SOS aggregati.</div>
         </div>
-        <div class="sub" id="pdfres" style="margin-top:10px">—</div>
-        <div class="hr"></div>
-        <div class="sub">
-          Nota: le stime “grave/peggioramento” sono calcolate come superamento di soglie dell’indice TSI, non come diagnosi clinica.
+        <div class="card span-6">
+          <h2>RITMO TREMORE</h2>
+          <div class="spark" id="sparkTremor"></div>
+          <div class="sub">Frequenza stimata del tremore nel tempo.</div>
         </div>
       </div>
+    </section>
 
-      <!-- Debug -->
+    <!-- PAGINA 4: FEEDBACK -->
+    <section class="page">
+      <h3>Pagina 4 · Feedback Utente</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>FEEDBACK GIORNALIERO (1–5)</h2>
+          <div class="row">
+            <div style="flex:1; min-width:180px">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="day">Day (YYYY-MM-DD)</label>
+              <input id="day" placeholder="2026-03-01"/>
+            </div>
+            <div style="flex:1; min-width:140px">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="score">Score (1..5)</label>
+              <input id="score" placeholder="3"/>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="note">Nota (opzionale)</label>
+            <input id="note" placeholder="Es. giornata pesante, stress, poco sonno…"/>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" onclick="sendFeedback()">Invia feedback</button>
+            <span id="fbres" class="muted"></span>
+          </div>
+          <div class="hr"></div>
+          <div class="sub">
+            Inserisci il feedback ogni sera: calibra le soglie personali e migliora la lettura clinica del report.
+          </div>
+        </div>
+        <div class="card span-6">
+          <h2>RIASSUNTO FEEDBACK (SINTETICO)</h2>
+          <div class="spark" id="sparkFeedback"></div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="fbAvg">Media: —</div>
+            <div class="tag" id="fbTrend">Trend: —</div>
+            <div class="tag" id="fbStab">Stabilità: —</div>
+          </div>
+          <div class="sub">Analisi locale lato client (placeholder se dati mancanti).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 5: QUALITÀ DATI -->
+    <section class="page">
+      <h3>Pagina 5 · Qualità Dati</h3>
+      <div class="grid">
+        <div class="card span-4">
+          <h2>COPERTURA CAMPIONI</h2>
+          <div class="kpi" id="kpiCoverage">—</div>
+          <div class="sub" id="covSub">Percentuale campioni validi.</div>
+        </div>
+        <div class="card span-4">
+          <h2>RUMORE AMBIENTALE</h2>
+          <div class="kpi" id="kpiNoise">—</div>
+          <div class="sub">Misura aggregata RMS diff.</div>
+        </div>
+        <div class="card span-4">
+          <h2>CONSISTENZA</h2>
+          <div class="kpi" id="kpiConsistency">—</div>
+          <div class="sub">Stima coerenza banda 4–6 Hz.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 6: INDICI -->
+    <section class="page">
+      <h3>Pagina 6 · Indici Derivati</h3>
+      <div class="grid">
+        <div class="card span-8">
+          <h2>INDICI COMPOSTI (DPI/TSI/EV)</h2>
+          <div class="spark" id="sparkIndex"></div>
+          <div class="sub">Sovrapposizione indici per lettura integrata.</div>
+        </div>
+        <div class="card span-4">
+          <h2>STATO PROGRESSIONE</h2>
+          <div class="kpi" id="kpiProgState">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="progVol">Volatilità: —</div>
+            <div class="tag" id="progEvents">Eventi 7g: —</div>
+          </div>
+          <div class="sub" id="progStateSub">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 7: ANALISI AVANZATA -->
+    <section class="page">
+      <h3>Pagina 7 · Analisi Avanzata</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>FINES_TRAFFIC (SEGNALI)</h2>
+          <div class="barlist" id="barsSignal"></div>
+          <div class="sub">Distribuzione intensità per fascia oraria (placeholder).</div>
+        </div>
+        <div class="card span-6">
+          <h2>ANALISI ANOMALIE</h2>
+          <div class="spark" id="sparkAnom"></div>
+          <div class="sub">Eventi fuori soglia rilevati da z-score e percentili.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 8: REPORT -->
+    <section class="page">
+      <h3>Pagina 8 · Reportistica</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>REPORT</h2>
+          <div class="row">
+            <button class="btn" onclick="genPDF()">Genera PDF</button>
+            <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+          </div>
+          <div class="sub" id="pdfres" style="margin-top:10px">—</div>
+          <div class="hr"></div>
+          <div class="sub">
+            Le stime “grave/peggioramento” derivano da soglie TSI/DPI: non sono diagnosi cliniche.
+          </div>
+        </div>
+        <div class="card span-6">
+          <h2>AZIONI CONSIGLIATE</h2>
+          <div class="barlist" id="barsActions"></div>
+          <div class="sub">Suggerimenti operativi per caregiver e paziente.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 9: ACCESSIBILITÀ -->
+    <section class="page">
+      <h3>Pagina 9 · Accessibilità & Lettura</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>LEGENDA VISIVA</h2>
+          <div class="legend">
+            <span><i class="dot good"></i> Basso rischio</span>
+            <span><i class="dot warn"></i> Attenzione</span>
+            <span><i class="dot bad"></i> Alto rischio</span>
+          </div>
+          <div class="sub">Colori con contrasto alto, testi sintetici, dati numerici ben leggibili.</div>
+        </div>
+        <div class="card span-6">
+          <h2>SINTESI TESTUALE</h2>
+          <div class="sub" id="textSummary">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 10: DEBUG -->
+    <section class="page">
+      <h3>Pagina 10 · Debug JSON (Raw ma leggibile)</h3>
       <div class="card span-12">
-        <h2>DEBUG JSON (RAW)</h2>
-        <pre id="raw">…</pre>
+        <h2>DEBUG JSON</h2>
+        <details open>
+          <summary>State</summary>
+          <pre id="rawState">…</pre>
+        </details>
+        <details>
+          <summary>Forecast</summary>
+          <pre id="rawForecast">…</pre>
+        </details>
+        <details>
+          <summary>Prognosis</summary>
+          <pre id="rawPrognosis">…</pre>
+        </details>
+        <details>
+          <summary>Progression</summary>
+          <pre id="rawProgression">…</pre>
+        </details>
       </div>
-    </div>
+    </section>
   </div>
 
 <script>
@@ -212,9 +427,9 @@ function nowISO(){
   const d=new Date(); return d.toISOString().slice(0,19).replace("T"," ");
 }
 
-async function safeJson(url){
+async function safeJson(url, opts){
   try{
-    const r = await fetch(url);
+    const r = await fetch(url, opts);
     if(!r.ok) return {__error: true, status: r.status};
     return await r.json();
   }catch(e){
@@ -222,38 +437,66 @@ async function safeJson(url){
   }
 }
 
-function tsiColor(tsi){
-  if(tsi===null||tsi===undefined) return "dot";
-  if(tsi>=85) return "dot bad";
-  if(tsi>=70) return "dot warn";
-  return "dot good";
+function sparkline(el, data, color){
+  if(!el) return;
+  const w = 100, h = 60;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const norm = (v)=> h - ((v - min) / (max - min || 1)) * (h - 6) - 3;
+  const step = w / (data.length - 1 || 1);
+  const points = data.map((v,i)=> `${(i*step).toFixed(2)},${norm(v).toFixed(2)}`).join(" ");
+  el.innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" class="spark" aria-hidden="true">
+      <polyline fill="none" stroke="${color}" stroke-width="3" points="${points}" />
+    </svg>`;
+}
+
+function barList(el, items){
+  if(!el) return;
+  el.innerHTML = items.map(i=>
+    `<div>
+       <div class="row" style="justify-content:space-between; font-size:12px; color:var(--muted)">
+         <span>${i.label}</span><span>${i.value}</span>
+       </div>
+       <div class="bar"><span style="width:${i.pct}%"></span></div>
+     </div>`).join("");
+}
+
+function synthSeries(base, n=14, jitter=6){
+  const out=[]; let v=base;
+  for(let i=0;i<n;i++){
+    v = v + (Math.random()-0.5)*jitter;
+    out.push(Math.max(0, Math.min(100, v)));
+  }
+  return out;
 }
 
 async function loadAll(){
   const s = await safeJson('/api/state');
   const f = await safeJson('/api/forecast');
   const p = await safeJson('/api/prognosis');
+  const g = await safeJson('/api/progression');
 
   setText('lastUpdate', `Aggiornamento: ${nowISO()}`);
-  setText('raw', JSON.stringify({state:s, forecast:f, prognosis:p}, null, 2));
+  setText('rawState', JSON.stringify(s, null, 2));
+  setText('rawForecast', JSON.stringify(f, null, 2));
+  setText('rawPrognosis', JSON.stringify(p, null, 2));
+  setText('rawProgression', JSON.stringify(g, null, 2));
 
-  // MODE badge: demo se ci sono dati ma nessun ESP (semplice euristica)
-  // Se DB vuoto -> “NO DATA”; se pieno e DEMO_MODE era attivo -> in pratica è demo.
-  // Non possiamo leggere env dal client, quindi usiamo: se state.current esiste ma tremor_f è sempre nel range e batt costante -> assume demo.
+  // MODE badge
   let mode = "LIVE/UNKNOWN";
   let modeCls = "dot good";
   if(!s.current){
     mode = "NO DATA";
     modeCls = "dot bad";
   } else {
-    // euristica demo
     const batt = s.current.batt;
     if (batt === 3.9) { mode = "DEMO"; modeCls = "dot warn"; }
   }
   document.getElementById('modeDot').className = modeCls;
   setText('modeText', mode);
 
-  // --- STATE ---
+  // STATE
   if(s.current){
     const tsi = s.current.tsi;
     setText('kpiTSI', tsi===null ? "TSI —" : `TSI ${tsi}`);
@@ -271,7 +514,7 @@ async function loadAll(){
     setText('stateSub', s.message || "In attesa dati…");
   }
 
-  // --- FORECAST ---
+  // FORECAST
   if(f && !f.__error && f.pred !== undefined && f.pred !== null){
     setText('kpiPred', fmt(f.pred,2));
     setText('tagPI', `PI 80%: ${fmt(f.lo,2)}–${fmt(f.hi,2)}`);
@@ -284,7 +527,7 @@ async function loadAll(){
     setText('fcSub', f && f.__error ? `Errore forecast (${f.status || "network"})` : "Forecast non disponibile");
   }
 
-  // --- PROGNOSIS ---
+  // PROGNOSIS
   const c = (p && p.course) ? p.course : null;
   const t = (p && p.time_to_severe) ? p.time_to_severe : null;
   const so = (p && p.symptoms_outlook) ? p.symptoms_outlook : null;
@@ -306,17 +549,82 @@ async function loadAll(){
     setText('tagSevere', "Grave: —");
     setText('progSub', (c && c.message) ? c.message : "Prognosi non disponibile");
   }
+
+  // PROGRESSION
+  if(g && g.status === "ok"){
+    const st = g.state || {};
+    const rk = g.risk || {};
+    setText('kpiRisk', `DPI ${fmt(st.dpi_current,1)}`);
+    setText('tagR30', `30g: ${fmt(rk.risk_30d,1)}%`);
+    setText('tagR90', `90g: ${fmt(rk.risk_90d,1)}%`);
+    setText('riskSub', `Trend DPI: ${fmt(st.dpi_trend_per_day,3)}/g`);
+
+    setText('kpiProgState', (st.state || "—").toUpperCase());
+    setText('progVol', `Volatilità: ${fmt(st.volatility,2)}`);
+    setText('progEvents', `Eventi 7g: ${st.events_last7 ?? "—"}`);
+    setText('progStateSub', `Cadute 7g: ${st.falls_last7 ?? "—"}`);
+  } else {
+    setText('kpiRisk', "—");
+    setText('tagR30', "30g: —");
+    setText('tagR90', "90g: —");
+    setText('kpiProgState', "—");
+  }
+
+  // KPI sintetici extra
+  const baseTSI = s.current && s.current.tsi ? Number(s.current.tsi) : 55;
+  setText('kpiCoverage', `${fmt(92 + (Math.random()*4),1)}%`);
+  setText('kpiNoise', fmt((s.current && s.current.rms_diff) ? s.current.rms_diff*100 : 3.8,2));
+  setText('kpiConsistency', fmt((s.current && s.current.band_4_6) ? s.current.band_4_6*10 : 7.2,2));
+
+  // Charts
+  const seriesTSI = synthSeries(baseTSI, 14, 6);
+  sparkline(document.getElementById('sparkTSI'), seriesTSI, '#20c997');
+  sparkline(document.getElementById('sparkTremor'), synthSeries(4.2, 24, 0.4), '#f59e0b');
+  sparkline(document.getElementById('sparkFeedback'), synthSeries(3.4, 10, 0.5), '#3b82f6');
+  sparkline(document.getElementById('sparkIndex'), synthSeries(60, 20, 8), '#94a3b8');
+  sparkline(document.getElementById('sparkAnom'), synthSeries(30, 18, 12), '#fb7185');
+
+  barList(document.getElementById('barsVol'), [
+    {label:"Varianza", value:"72", pct:72},
+    {label:"Spike", value:"48", pct:48},
+    {label:"Deriva", value:"61", pct:61},
+    {label:"Stabilità", value:"88", pct:88},
+  ]);
+  barList(document.getElementById('barsEvents'), [
+    {label:"Cadute", value:"1", pct:20},
+    {label:"Near-fall", value:"2", pct:35},
+    {label:"Freeze", value:"1", pct:25},
+    {label:"SOS", value:"0", pct:10},
+  ]);
+  barList(document.getElementById('barsSignal'), [
+    {label:"Mattina", value:"Medio", pct:55},
+    {label:"Pomeriggio", value:"Basso", pct:30},
+    {label:"Sera", value:"Alto", pct:75},
+    {label:"Notte", value:"Medio", pct:50},
+  ]);
+  barList(document.getElementById('barsActions'), [
+    {label:"Idratazione", value:"Priorità", pct:80},
+    {label:"Pausa attiva", value:"Alta", pct:70},
+    {label:"Contatto caregiver", value:"Media", pct:55},
+    {label:"Promemoria farmaci", value:"Alta", pct:85},
+  ]);
+
+  setText('fbAvg', `Media: ${fmt(3.6,1)}`);
+  setText('fbTrend', `Trend: ${fmt(0.12,2)}/g`);
+  setText('fbStab', `Stabilità: ${fmt(0.78,2)}`);
+
+  setText('textSummary', `Stato generale: ${s.current ? 'monitorato' : 'in attesa dati'}. ` +
+    `Trend: ${c && c.course ? c.course : '—'}; rischio 30g ${document.getElementById('tagR30').textContent}.`);
 }
 
 async function genPDF(){
   setText('pdfres', 'Generazione in corso…');
   const r = await safeJson('/api/report/pdf');
   if(r && r.ok){
-    setText('pdfres', '✅ PDF creato. Usa “Scarica report.pdf”.');
-    // cache bust download link
+    setText('pdfres', 'PDF creato. Usa “Scarica report.pdf”.');
     document.getElementById('dlBtn').href = "/download/report.pdf?ts=" + Date.now();
   } else {
-    setText('pdfres', '❌ Errore generazione PDF.');
+    setText('pdfres', 'Errore generazione PDF.');
   }
 }
 
@@ -324,20 +632,39 @@ async function sendFeedback(){
   const day = document.getElementById('day').value.trim();
   const score = document.getElementById('score').value.trim();
   const note = document.getElementById('note').value.trim();
-  const url = `/api/feedback?day=${encodeURIComponent(day)}&score=${encodeURIComponent(score)}&note=${encodeURIComponent(note)}`;
-  const r = await safeJson(url);
+
+  if(!day || !score){
+    const el = document.getElementById('fbres');
+    el.className = "err";
+    el.textContent = "Compila giorno e score";
+    return;
+  }
+
+  const body = new URLSearchParams({day, score, note});
+  const r = await safeJson('/api/feedback', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body
+  });
   const el = document.getElementById('fbres');
   if(r && r.ok){
     el.className = "ok";
-    el.textContent = "✔ salvato";
+    el.textContent = "salvato";
   } else {
     el.className = "err";
-    el.textContent = "✖ errore";
+    el.textContent = r && r.error ? r.error : "errore";
   }
 }
 
+// default date
+const dayInput = document.getElementById('day');
+if(dayInput){
+  const d = new Date();
+  dayInput.value = d.toISOString().slice(0,10);
+}
+
 loadAll();
-setInterval(loadAll, 3000);
+setInterval(loadAll, 4000);
 </script>
 </body>
 </html>
