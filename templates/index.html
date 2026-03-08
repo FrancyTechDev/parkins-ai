@@ -720,11 +720,10 @@ async function sendFeedback(){
     return;
   }
 
-  const body = new URLSearchParams({day, score, note});
   const r = await safeJson('/api/feedback', {
     method: 'POST',
-    headers: {'Content-Type':'application/x-www-form-urlencoded'},
-    body
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({day, score, note})
   });
   const el = document.getElementById('fbres');
   if(r && r.ok){
