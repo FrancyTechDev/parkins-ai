@@ -1,5 +1,3 @@
-{% extends "base.html" %}
-{% block content %}
 <section class="page">
   <h3>Pagina 1 · Panoramica Operativa</h3>
   <div class="grid">
@@ -42,6 +40,176 @@
       </div>
       <div class="sub" id="riskSub">Analisi rischio cumulata.</div>
     </div>
+    </section>
+
+    <!-- PAGINA 4: EVENTI -->
+    <section class="page">
+      <h3>Pagina 4 · Eventi & Sicurezza</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>Eventi giornalieri</h2>
+          <div id="chartEvents" class="chart"></div>
+        </div>
+        <div class="card span-6">
+          <h2>Eventi per tipo</h2>
+          <div id="chartEventsType" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 5: FEEDBACK -->
+    <section class="page">
+      <h3>Pagina 5 · Feedback Utente</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>FEEDBACK GIORNALIERO (1–5)</h2>
+          <div class="row">
+            <div style="flex:1; min-width:180px">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="day">Day (YYYY-MM-DD)</label>
+              <input id="day" placeholder="2026-03-01"/>
+            </div>
+            <div style="flex:1; min-width:140px">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="score">Score (1..5)</label>
+              <input id="score" placeholder="3"/>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="note">Nota (opzionale)</label>
+            <input id="note" placeholder="Es. giornata pesante, stress, poco sonno…"/>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" onclick="sendFeedback()">Invia feedback</button>
+            <span id="fbres" class="muted"></span>
+          </div>
+          <div class="hr"></div>
+          <div class="sub">
+            Inserisci il feedback ogni sera: calibra le soglie personali e migliora la lettura clinica del report.
+          </div>
+        </div>
+        <div class="card span-6">
+          <h2>Feedback (andamento)</h2>
+          <div id="chartFeedback" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 6: PROGRESSIONE / DPI -->
+    <section class="page">
+      <h3>Pagina 6 · Progressione & DPI</h3>
+      <div class="grid">
+        <div class="card span-8">
+          <h2>DPI (90 giorni)</h2>
+          <div id="chartDPI" class="chart"></div>
+        </div>
+        <div class="card span-4">
+          <h2>STATO PROGRESSIONE</h2>
+          <div class="kpi" id="kpiProgState">—</div>
+          <div class="row" style="margin-top:10px">
+            <div class="tag" id="progVol">Volatilità: —</div>
+            <div class="tag" id="progEvents">Eventi 7g: —</div>
+          </div>
+          <div class="sub" id="progStateSub">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 7: FORECASTS -->
+    <section class="page">
+      <h3>Pagina 7 · Storico Forecast</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>Predizioni (ultimi 30 giorni)</h2>
+          <div id="chartForecast" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 8: WEEK/MONTH -->
+    <section class="page">
+      <h3>Pagina 8 · Aggregazioni Settimanali/Mensili</h3>
+      <div class="grid">
+        <div class="card span-6">
+          <h2>Settimanale</h2>
+          <div id="chartWeekly" class="chart"></div>
+        </div>
+        <div class="card span-6">
+          <h2>Mensile</h2>
+          <div id="chartMonthly" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 9: EXPORT -->
+    <section class="page">
+      <h3>Pagina 9 · Export CSV (DB completo)</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>SCARICA DATI</h2>
+          <div class="row">
+            <div style="min-width:220px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="tableSel">Tabella</label>
+              <select id="tableSel">
+                <option value="samples_ref">samples_ref</option>
+                <option value="daily_agg">daily_agg</option>
+                <option value="weekly_agg">weekly_agg</option>
+                <option value="monthly_agg">monthly_agg</option>
+                <option value="events">events</option>
+                <option value="forecasts">forecasts</option>
+                <option value="user_feedback">user_feedback</option>
+                <option value="baseline">baseline</option>
+                <option value="user_profile">user_profile</option>
+              </select>
+            </div>
+            <button class="btn" onclick="downloadCSV('week')">Ultima settimana</button>
+            <button class="btn" onclick="downloadCSV('month')">Ultimo mese</button>
+            <button class="btn" onclick="downloadCSV('year')">Ultimo anno</button>
+            <span class="muted" id="csvStatus"></span>
+          </div>
+          <div class="sub">Il CSV include tutte le colonne della tabella selezionata nel periodo scelto.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 10: REPORT PDF -->
+    <section class="page">
+      <h3>Pagina 10 · Report PDF (Analisi clinica AI)</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>REPORT</h2>
+          <div class="row">
+            <button class="btn" onclick="genPDF()">Genera PDF</button>
+            <a class="btn ghost" id="dlBtn" href="/download/report.pdf" target="_blank" rel="noopener">Scarica report.pdf</a>
+            <span class="muted" id="pdfres"></span>
+          </div>
+          <div class="sub" style="margin-top:10px">
+            Il PDF include la sezione “Prognosi e risposte alle domande essenziali (basata su TSI)”.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 11: DEBUG -->
+    <section class="page">
+      <h3>Pagina 11 · Debug JSON (Raw ma leggibile)</h3>
+      <div class="card span-12">
+        <h2>DEBUG JSON</h2>
+        <details open>
+          <summary>State</summary>
+          <pre id="rawState">…</pre>
+        </details>
+        <details>
+          <summary>Forecast</summary>
+          <pre id="rawForecast">…</pre>
+        </details>
+        <details>
+          <summary>Prognosis</summary>
+          <pre id="rawPrognosis">…</pre>
+        </details>
+        <details>
+          <summary>Progression</summary>
+          <pre id="rawProgression">…</pre>
+        </details>
+      </div>
+    </section>
   </div>
 </section>
-{% endblock %}
