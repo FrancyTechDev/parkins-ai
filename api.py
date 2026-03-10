@@ -113,7 +113,7 @@ async def api_settings_set(request: Request, mode: str = None):
     c = connect()
     c.execute(
         "INSERT INTO events(ts,type,severity,meta,category,subtype,message) VALUES (?,?,?,?,?,?,?)",
-        (int(time.time()), "setting", 1, f\"ingest_mode={mode}\", "system", "ingest_mode", "Cambio modalita salvataggio")
+        (int(time.time()), "setting", 1, f"ingest_mode={mode}", "system", "ingest_mode", "Cambio modalita salvataggio")
     )
     c.commit()
     c.close()
