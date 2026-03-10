@@ -1,7 +1,7 @@
 import json, time
 import serial
 from config import SERIAL_PORT, BAUD, AUTO_TSI, AUTO_PEAKS, AUTO_TREMOR_HZ
-from db import init_db, connect, get_setting
+from db import init_db, connect, get_setting, insert_history_sample
 from metrics import compute_tsi
 
 def run():
@@ -60,6 +60,7 @@ def run():
             (ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
         )
         c.commit()
+        insert_history_sample(ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
 
 if __name__ == "__main__":
     run()

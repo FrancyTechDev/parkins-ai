@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from db import init_db, connect, get_setting, set_setting
+from db import init_db, connect, get_setting, set_setting, history_table_for_ts, ensure_history_table
 from demo_seed import seed_demo
 from baseline import recompute_baseline
 from aggregate import recompute_daily, recompute_weekly, recompute_monthly
@@ -109,6 +109,14 @@ async def api_settings_set(request: Request, mode: str = None):
     if mode not in ("on", "off", "auto"):
         return {"ok": False, "error": "mode must be on|off|auto"}
     set_setting("ingest_mode", mode)
+    # Log as system event
+    c = connect()
+    c.execute(
+        "INSERT INTO events(ts,type,severity,meta,category,subtype,message) VALUES (?,?,?,?,?,?,?)",
+        (int(time.time()), "setting", 1, f\"ingest_mode={mode}\", "system", "ingest_mode", "Cambio modalita salvataggio")
+    )
+    c.commit()
+    c.close()
     return {"ok": True, "ingest_mode": mode}
 
 @app.post("/api/feedback")
@@ -155,6 +163,37 @@ def log_event(ts: int, type: str, severity: int = 1, meta: str = ""):
     c.commit()
     c.close()
     return {"ok": True}
+
+@app.post("/api/system_event")
+def log_system_event(
+    ts: int = None,
+    category: str = "system",
+    type: str = "generic",
+    subtype: str = "",
+    severity: int = 1,
+    message: str = "",
+    meta: str = ""
+):
+    ts = int(ts) if ts is not None else int(time.time())
+    c = connect()
+    c.execute(
+        "INSERT INTO events(ts,type,severity,meta,category,subtype,message) VALUES (?,?,?,?,?,?,?)",
+        (ts, type, severity, meta, category, subtype, message)
+    )
+    c.commit()
+    c.close()
+    return {"ok": True}
+
+@app.get("/api/history/ensure")
+def ensure_history(day: str):
+    # day format: YYYY-MM-DD
+    try:
+        dt = datetime.strptime(day, "%Y-%m-%d")
+    except Exception:
+        return {"ok": False, "error": "day must be YYYY-MM-DD"}
+    table = f"history_{dt.strftime('%Y_%m_%d')}"
+    ensure_history_table(table)
+    return {"ok": True, "table": table}
 
 @app.post("/api/agg")
 def recompute_all():

@@ -62,7 +62,10 @@ def init_db():
       ts INTEGER NOT NULL,
       type TEXT NOT NULL,
       severity INTEGER DEFAULT 1,
-      meta TEXT DEFAULT ""
+      meta TEXT DEFAULT "",
+      category TEXT DEFAULT "sensor",
+      subtype TEXT DEFAULT "",
+      message TEXT DEFAULT ""
     )
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);")
@@ -133,6 +136,12 @@ def init_db():
     c.commit()
     c.close()
 
+    # Backfill columns if DB was created before new fields existed.
+    try:
+        _ensure_events_columns()
+    except Exception:
+        pass
+
 def get_setting(key, default=None):
     c = connect()
     cur = c.cursor()
@@ -149,6 +158,57 @@ def set_setting(key, value):
     cur.execute(
         "INSERT OR REPLACE INTO app_settings(key,value,updated_ts) VALUES (?,?,?)",
         (key, value, int(__import__('time').time()))
+    )
+    c.commit()
+    c.close()
+
+def _ensure_events_columns():
+    c = connect()
+    cur = c.cursor()
+    cur.execute("PRAGMA table_info(events)")
+    cols = {r[1] for r in cur.fetchall()}
+    if "category" not in cols:
+        cur.execute("ALTER TABLE events ADD COLUMN category TEXT DEFAULT 'sensor'")
+    if "subtype" not in cols:
+        cur.execute("ALTER TABLE events ADD COLUMN subtype TEXT DEFAULT ''")
+    if "message" not in cols:
+        cur.execute("ALTER TABLE events ADD COLUMN message TEXT DEFAULT ''")
+    c.commit()
+    c.close()
+
+def history_table_for_ts(ts: int):
+    import datetime as _dt
+    day = _dt.datetime.fromtimestamp(int(ts)).strftime("%Y_%m_%d")
+    return f"history_{day}"
+
+def ensure_history_table(table_name: str):
+    c = connect()
+    cur = c.cursor()
+    cur.execute(f"""
+    CREATE TABLE IF NOT EXISTS {table_name} (
+      ts INTEGER PRIMARY KEY,
+      rms_diff REAL NOT NULL,
+      band_4_6 REAL NOT NULL,
+      peaks REAL NOT NULL,
+      tremor_f REAL,
+      gsr REAL,
+      batt REAL,
+      qf INTEGER DEFAULT 0,
+      tsi REAL
+    )
+    """)
+    cur.execute(f"CREATE INDEX IF NOT EXISTS idx_{table_name}_ts ON {table_name}(ts);")
+    c.commit()
+    c.close()
+
+def insert_history_sample(ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi):
+    table = history_table_for_ts(ts)
+    ensure_history_table(table)
+    c = connect()
+    c.execute(
+        f"INSERT OR REPLACE INTO {table}(ts,rms_diff,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
     )
     c.commit()
     c.close()
