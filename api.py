@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from db import init_db, connect
+from db import init_db, connect, get_setting, set_setting
 from demo_seed import seed_demo
 from baseline import recompute_baseline
 from aggregate import recompute_daily, recompute_weekly, recompute_monthly
@@ -77,6 +77,10 @@ def report_page(request: Request):
 def debug_page(request: Request):
     return templates.TemplateResponse("debug.html", {"request": request, "page": "debug"})
 
+@app.get("/settings", response_class=HTMLResponse)
+def settings_page(request: Request):
+    return templates.TemplateResponse("settings.html", {"request": request, "page": "settings"})
+
 @app.get("/ping")
 def ping():
     return {"pong": True, "module": "api.py"}
@@ -89,6 +93,23 @@ def state():
     if df.empty:
         return {"current": None, "message": "No data yet"}
     return {"current": df.iloc[0].to_dict()}
+
+@app.get("/api/settings")
+def api_settings():
+    return {"ingest_mode": get_setting("ingest_mode", "on")}
+
+@app.post("/api/settings")
+async def api_settings_set(request: Request, mode: str = None):
+    if mode is None:
+        try:
+            payload = await request.json()
+            mode = payload.get("mode", mode)
+        except Exception:
+            pass
+    if mode not in ("on", "off", "auto"):
+        return {"ok": False, "error": "mode must be on|off|auto"}
+    set_setting("ingest_mode", mode)
+    return {"ok": True, "ingest_mode": mode}
 
 @app.post("/api/feedback")
 async def feedback(request: Request, day: str = None, score: int = None, note: str = ""):

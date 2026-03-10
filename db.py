@@ -118,5 +118,37 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_ts INTEGER NOT NULL
+    )
+    """)
+    cur.execute(
+        "INSERT OR IGNORE INTO app_settings(key,value,updated_ts) VALUES (?,?,?)",
+        ("ingest_mode", "on", int(__import__('time').time()))
+    )
+
+    c.commit()
+    c.close()
+
+def get_setting(key, default=None):
+    c = connect()
+    cur = c.cursor()
+    cur.execute("SELECT value FROM app_settings WHERE key = ?", (key,))
+    row = cur.fetchone()
+    c.close()
+    if row is None:
+        return default
+    return row[0]
+
+def set_setting(key, value):
+    c = connect()
+    cur = c.cursor()
+    cur.execute(
+        "INSERT OR REPLACE INTO app_settings(key,value,updated_ts) VALUES (?,?,?)",
+        (key, value, int(__import__('time').time()))
+    )
     c.commit()
     c.close()

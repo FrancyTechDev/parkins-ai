@@ -30,3 +30,8 @@ FORECAST_REFRESH_SEC = int(os.getenv("FORECAST_REFRESH_SEC", "900"))  # 15 min
 TSI_MED = int(os.getenv("TSI_MED", "55"))
 TSI_HIGH = int(os.getenv("TSI_HIGH", "70"))
 TSI_SEVERE = int(os.getenv("TSI_SEVERE", "85"))
+
+# Auto-save thresholds (for ingest_mode=auto)
+AUTO_TSI = float(os.getenv("AUTO_TSI", "2.5"))
+AUTO_PEAKS = int(os.getenv("AUTO_PEAKS", "12"))
+AUTO_TREMOR_HZ = float(os.getenv("AUTO_TREMOR_HZ", "4.5"))

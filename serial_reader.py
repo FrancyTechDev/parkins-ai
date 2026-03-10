@@ -1,7 +1,7 @@
 import json, time
 import serial
-from config import SERIAL_PORT, BAUD
-from db import init_db, connect
+from config import SERIAL_PORT, BAUD, AUTO_TSI, AUTO_PEAKS, AUTO_TREMOR_HZ
+from db import init_db, connect, get_setting
 from metrics import compute_tsi
 
 def run():
@@ -10,6 +10,9 @@ def run():
 
     c = connect()
     c.execute("PRAGMA journal_mode=WAL;")
+
+    last_mode_check = 0
+    ingest_mode = "on"
 
     while True:
         line = ser.readline().decode(errors="ignore").strip()
@@ -35,6 +38,21 @@ def run():
         qf = int(msg.get("qf", 0))
 
         tsi = compute_tsi(rms, band, peaks, tremor_f)
+
+        now = time.time()
+        if now - last_mode_check > 2:
+            ingest_mode = get_setting("ingest_mode", "on")
+            last_mode_check = now
+
+        important = (
+            (tsi is not None and tsi >= AUTO_TSI) or
+            (peaks is not None and peaks >= AUTO_PEAKS) or
+            (tremor_f is not None and tremor_f >= AUTO_TREMOR_HZ)
+        )
+        if ingest_mode == "off":
+            continue
+        if ingest_mode == "auto" and not important:
+            continue
 
         c.execute(
             "INSERT OR REPLACE INTO samples_ref(ts,rms_diff,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
