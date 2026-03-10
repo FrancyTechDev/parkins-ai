@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page">
+  <h3>Pagina 5 · Feedback Utente</h3>
+  <div class="grid">
+    <div class="card span-6">
+      <h2>FEEDBACK GIORNALIERO (1–5)</h2>
+      <div class="row">
+        <div style="flex:1; min-width:180px">
+          <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="day">Day (YYYY-MM-DD)</label>
+          <input id="day" placeholder="2026-03-01"/>
+        </div>
+        <div style="flex:1; min-width:140px">
+          <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="score">Score (1..5)</label>
+          <input id="score" placeholder="3"/>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="note">Nota (opzionale)</label>
+        <input id="note" placeholder="Es. giornata pesante, stress, poco sonno…"/>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="sendFeedback()">Invia feedback</button>
+        <span id="fbres" class="muted"></span>
+      </div>
+      <div class="hr"></div>
+      <div class="sub">
+        Inserisci il feedback ogni sera: calibra le soglie personali e migliora la lettura clinica del report.
+      </div>
+    </div>
+    <div class="card span-6">
+      <h2>Feedback (andamento)</h2>
+      <div id="chartFeedback" class="chart"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page">
+  <h3>Pagina 9 · Export CSV (DB completo)</h3>
+  <div class="grid">
+    <div class="card span-12">
+      <h2>SCARICA DATI</h2>
+      <div class="row">
+        <div style="min-width:220px; flex:1">
+          <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="tableSel">Tabella</label>
+          <select id="tableSel">
+            <option value="samples_ref">samples_ref</option>
+            <option value="daily_agg">daily_agg</option>
+            <option value="weekly_agg">weekly_agg</option>
+            <option value="monthly_agg">monthly_agg</option>
+            <option value="events">events</option>
+            <option value="forecasts">forecasts</option>
+            <option value="user_feedback">user_feedback</option>
+            <option value="baseline">baseline</option>
+            <option value="user_profile">user_profile</option>
+          </select>
+        </div>
+        <button class="btn" onclick="downloadCSV('week')">Ultima settimana</button>
+        <button class="btn" onclick="downloadCSV('month')">Ultimo mese</button>
+        <button class="btn" onclick="downloadCSV('year')">Ultimo anno</button>
+        <span class="muted" id="csvStatus"></span>
+      </div>
+      <div class="sub">Il CSV include tutte le colonne della tabella selezionata nel periodo scelto.</div>
+    </div>
+  </div>
+</section>
+{% endblock %}

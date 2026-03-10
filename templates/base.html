@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PARKINS-AI</title>
+  <style>
+    :root{
+      --bg:#0b1119;
+      --panel:#121a24;
+      --panel-2:#0f1822;
+      --ink:#e7eef7;
+      --muted:#9fb0c4;
+      --line:#223042;
+      --acc:#20c997;
+      --acc-2:#f59e0b;
+      --acc-3:#3b82f6;
+      --bad:#fb7185;
+      --good:#34d399;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1000px 700px at 15% 15%, rgba(32,201,151,.20), transparent 60%),
+        radial-gradient(900px 600px at 85% 10%, rgba(59,130,246,.18), transparent 55%),
+        radial-gradient(900px 700px at 75% 85%, rgba(245,158,11,.18), transparent 60%),
+        var(--bg);
+    }
+    a{color:var(--acc-3); text-decoration:none}
+    .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 60px}
+
+    .top{
+      display:flex; gap:14px; align-items:center; justify-content:space-between;
+      padding:18px 18px; border:1px solid var(--line); border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(18,26,36,.92), rgba(12,20,30,.70));
+      box-shadow: var(--shadow);
+      position:sticky; top:14px; z-index:2; backdrop-filter: blur(8px);
+    }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:46px; height:46px; border-radius:14px;
+      background: conic-gradient(from 120deg, #20c997, #3b82f6, #f59e0b, #20c997);
+      box-shadow: 0 10px 20px rgba(32,201,151,.28);
+    }
+    .title h1{margin:0; font-size:20px; letter-spacing:.4px}
+    .title p{margin:4px 0 0; color:var(--muted); font-size:12px}
+    .pillrow{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      font-size:12px; color:var(--ink);
+      border:1px solid var(--line); background: rgba(18,26,36,.75);
+      padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center;
+    }
+    .dot{width:8px; height:8px; border-radius:99px; background:var(--muted)}
+    .dot.good{background:var(--good)}
+    .dot.warn{background:var(--acc-2)}
+    .dot.bad{background:var(--bad)}
+
+    .nav{
+      margin-top:12px; padding:10px 12px; border:1px solid var(--line); border-radius: var(--r);
+      background: rgba(12,20,30,.55); display:flex; flex-wrap:wrap; gap:8px;
+    }
+    .nav a{
+      font-size:12px; padding:7px 10px; border-radius:999px;
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color:var(--muted);
+    }
+    .nav a.active{color:var(--ink); background: rgba(32,201,151,.18); border-color: rgba(32,201,151,.4)}
+
+    .grid{display:grid; grid-template-columns: repeat(12,1fr); gap:14px; margin-top:14px}
+    .card{
+      border:1px solid var(--line); border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(18,26,36,.85), rgba(13,20,30,.55));
+      box-shadow: var(--shadow); padding:16px;
+    }
+    .card h2{margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.6px}
+    .kpi{font-size:30px; font-weight:800; letter-spacing:.2px}
+    .sub{margin-top:8px; color:var(--muted); font-size:12px; line-height:1.45}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .tag{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color:var(--muted);
+    }
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.10);
+      background: rgba(32,201,151,.16);
+      color: var(--ink);
+      padding:10px 12px; border-radius: 14px;
+      cursor:pointer; font-weight:700; font-size:12px;
+      transition: transform .06s ease, background .12s ease;
+    }
+    .btn:hover{background: rgba(32,201,151,.24)}
+    .btn:active{transform: translateY(1px)}
+    .btn.ghost{background: rgba(18,26,36,.55)}
+    .btn.danger{background: rgba(251,113,133,.16)}
+    input, select{
+      width:100%; padding:11px 12px; border-radius: 14px;
+      border:1px solid var(--line); background: rgba(11,15,23,.45); color: var(--ink);
+      outline:none;
+    }
+    input::placeholder{color:#6b7280}
+    .muted{color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .span-3{grid-column: span 3}
+    .span-4{grid-column: span 4}
+    .span-5{grid-column: span 5}
+    .span-6{grid-column: span 6}
+    .span-7{grid-column: span 7}
+    .span-8{grid-column: span 8}
+    .span-9{grid-column: span 9}
+    .span-12{grid-column: span 12}
+    @media(max-width:1000px){
+      .span-3,.span-4,.span-5,.span-6,.span-7,.span-8,.span-9{grid-column: span 12}
+      .pillrow{justify-content:flex-start}
+      .top{flex-direction:column; align-items:flex-start; position:static}
+    }
+    .hr{height:1px; background: var(--line); margin:12px 0}
+    .ok{color:var(--good)}
+    .err{color:var(--bad)}
+
+    .chart{
+      position:relative; height:220px; width:100%;
+      background: rgba(11,15,23,.35);
+      border:1px solid var(--line);
+      border-radius:14px; overflow:hidden;
+    }
+    .chart svg{width:100%; height:100%; display:block}
+    .tooltip{
+      position:absolute; pointer-events:none; background:rgba(10,15,25,.92);
+      border:1px solid var(--line); color:var(--ink); font-size:12px;
+      padding:6px 8px; border-radius:10px; transform:translate(-50%,-110%);
+      white-space:nowrap; display:none; z-index:3;
+    }
+    .legend{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted)}
+    .legend span{display:inline-flex; gap:6px; align-items:center}
+    .page{
+      margin-top:18px; padding:16px; border:1px dashed rgba(255,255,255,.07);
+      border-radius: var(--r); background: rgba(12,20,30,.28);
+    }
+    .page h3{margin:0 0 12px; font-size:14px; letter-spacing:.4px}
+
+    details{
+      border:1px solid var(--line); border-radius: var(--r);
+      background: rgba(12,20,30,.45); padding:10px 12px;
+    }
+    details + details{margin-top:10px}
+    summary{cursor:pointer; font-weight:700; color:var(--ink)}
+    pre{
+      margin:10px 0 0; white-space:pre-wrap; word-break:break-word;
+      background: rgba(11,15,23,.55); border:1px solid var(--line);
+      padding:12px; border-radius: var(--r);
+      max-height: 360px; overflow:auto;
+    }
+  </style>
+</head>
+<body data-page="{{ page }}">
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="title">
+          <h1>PARKINS-AI</h1>
+          <p>Monitoraggio + previsione locale. Report automatici. (Demo quando c’è ESP32)</p>
+        </div>
+      </div>
+      <div class="pillrow">
+        <div class="pill"><span id="modeDot" class="dot"></span><span id="modeText">MODE</span></div>
+        <div class="pill"><span class="dot good"></span><span id="lastUpdate">Aggiornamento: —</span></div>
+        <div class="pill"><span class="dot"></span><span class="mono" id="apiBase">/api</span></div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="/" data-page="overview">Panoramica</a>
+      <a href="/series" data-page="series">Serie TSI</a>
+      <a href="/tremor" data-page="tremor">Tremore</a>
+      <a href="/events" data-page="events">Eventi</a>
+      <a href="/feedback" data-page="feedback">Feedback</a>
+      <a href="/progression" data-page="progression">Progressione</a>
+      <a href="/forecasts" data-page="forecasts">Forecast</a>
+      <a href="/aggregations" data-page="aggregations">Aggregazioni</a>
+      <a href="/export" data-page="export">Export CSV</a>
+      <a href="/report" data-page="report">Report PDF</a>
+      <a href="/debug" data-page="debug">Debug</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+  </div>
+
+<script>
+function el(id){ return document.getElementById(id); }
+function fmt(n, d=2){
+  if(n===undefined || n===null || Number.isNaN(n)) return "—";
+  return Number(n).toFixed(d);
+}
+function setText(id, txt){
+  const node = el(id);
+  if(node) node.textContent = txt;
+}
+function nowISO(){
+  const d=new Date(); return d.toISOString().slice(0,19).replace("T"," ");
+}
+
+async function safeJson(url, opts){
+  try{
+    const r = await fetch(url, opts);
+    if(!r.ok) return {__error: true, status: r.status};
+    return await r.json();
+  }catch(e){
+    return {__error: true, msg: String(e)};
+  }
+}
+
+function createTooltip(el){
+  let tip = el.querySelector('.tooltip');
+  if(!tip){
+    tip = document.createElement('div');
+    tip.className = 'tooltip';
+    el.appendChild(tip);
+  }
+  return tip;
+}
+
+function lineChart(el, points, opts){
+  if(!el || !points || points.length === 0){
+    if(el) el.innerHTML = '<div class="sub" style="padding:12px">Dati non disponibili</div>';
+    return;
+  }
+  const w = el.clientWidth || 600;
+  const h = el.clientHeight || 220;
+  const pad = 24;
+  const ys = points.map(p=>p.y);
+  const ymin = Math.min(...ys);
+  const ymax = Math.max(...ys);
+  const xScale = (i)=> pad + (i/(points.length-1 || 1))*(w-2*pad);
+  const yScale = (v)=> (h-pad) - ((v - ymin) / (ymax - ymin || 1))*(h-2*pad);
+  const path = points.map((p,i)=> `${xScale(i).toFixed(2)},${yScale(p.y).toFixed(2)}`).join(' ');
+
+  const svg = `
+    <svg viewBox="0 0 ${w} ${h}">
+      <polyline fill="none" stroke="${opts.color || '#20c997'}" stroke-width="2.5" points="${path}" />
+      <circle id="${opts.id}-dot" cx="${xScale(points.length-1)}" cy="${yScale(points[points.length-1].y)}" r="4" fill="${opts.color || '#20c997'}" />
+      <line id="${opts.id}-v" x1="0" y1="${pad}" x2="0" y2="${h-pad}" stroke="rgba(255,255,255,.2)" stroke-width="1" />
+      <rect id="${opts.id}-hit" x="0" y="0" width="${w}" height="${h}" fill="transparent" />
+    </svg>`;
+  el.innerHTML = svg;
+
+  const tip = createTooltip(el);
+  const dot = el.querySelector(`#${opts.id}-dot`);
+  const vline = el.querySelector(`#${opts.id}-v`);
+  const hit = el.querySelector(`#${opts.id}-hit`);
+
+  function showAt(i, x){
+    const p = points[i];
+    const cx = xScale(i);
+    const cy = yScale(p.y);
+    dot.setAttribute('cx', cx);
+    dot.setAttribute('cy', cy);
+    vline.setAttribute('x1', cx);
+    vline.setAttribute('x2', cx);
+    tip.style.left = `${x}px`;
+    tip.style.top = `${cy}px`;
+    tip.style.display = 'block';
+    tip.textContent = `${p.label} • ${p.yLabel || p.y}`;
+  }
+
+  hit.addEventListener('mousemove', (e)=>{
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const idx = Math.max(0, Math.min(points.length-1, Math.round((x / rect.width) * (points.length-1))));
+    showAt(idx, x);
+  });
+  hit.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
+}
+
+function tsLabel(ts){
+  const d = new Date(ts*1000);
+  return d.toISOString().slice(0,16).replace('T',' ');
+}
+
+function dayLabel(day){
+  return day;
+}
+
+function aggregateEventsByDay(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const d = new Date(r.ts*1000).toISOString().slice(0,10);
+    const v = map.get(d) || {total:0, fall:0, near_fall:0, freeze:0, sos:0};
+    v.total += 1;
+    v[r.type] = (v[r.type] || 0) + 1;
+    map.set(d, v);
+  });
+  const days = Array.from(map.keys()).sort();
+  return days.map(d=>({day:d, ...map.get(d)}));
+}
+
+async function loadAll(){
+  const s = await safeJson('/api/state');
+  const f = await safeJson('/api/forecast');
+  const p = await safeJson('/api/prognosis');
+  const g = await safeJson('/api/progression');
+
+  const samples = await safeJson('/api/series/samples?days=7&limit=5000');
+  const daily = await safeJson('/api/series/daily?days=90');
+  const weekly = await safeJson('/api/series/weekly?weeks=52');
+  const monthly = await safeJson('/api/series/monthly?months=24');
+  const events = await safeJson('/api/series/events?days=90');
+  const feedback = await safeJson('/api/series/feedback?days=365');
+  const forecasts = await safeJson('/api/series/forecasts?days=30');
+
+  setText('lastUpdate', `Aggiornamento: ${nowISO()}`);
+  setText('rawState', JSON.stringify(s, null, 2));
+  setText('rawForecast', JSON.stringify(f, null, 2));
+  setText('rawPrognosis', JSON.stringify(p, null, 2));
+  setText('rawProgression', JSON.stringify(g, null, 2));
+
+  // MODE badge
+  let mode = "LIVE/UNKNOWN";
+  let modeCls = "dot good";
+  if(!s.current){
+    mode = "NO DATA";
+    modeCls = "dot bad";
+  } else {
+    const batt = s.current.batt;
+    if (batt === 3.9) { mode = "DEMO"; modeCls = "dot warn"; }
+  }
+  const modeDot = el('modeDot');
+  if(modeDot) modeDot.className = modeCls;
+  setText('modeText', mode);
+
+  // STATE
+  if(s.current){
+    const tsi = s.current.tsi;
+    setText('kpiTSI', tsi===null ? "TSI —" : `TSI ${tsi}`);
+    const qf = s.current.qf;
+    setText('tagQual', `Qualità: ${qf}`);
+    const tf = s.current.tremor_f;
+    setText('tagFreq', `Freq: ${tf?fmt(tf,2)+" Hz":"—"}`);
+    setText('stateSub',
+      `rms_diff=${fmt(s.current.rms_diff,4)} | band_4_6=${fmt(s.current.band_4_6,3)} | peaks=${s.current.peaks}`
+    );
+  } else {
+    setText('kpiTSI', "—");
+    setText('tagQual', "Qualità: —");
+    setText('tagFreq', "Freq: —");
+    setText('stateSub', s.message || "In attesa dati…");
+  }
+
+  // FORECAST
+  if(f && !f.__error && f.pred !== undefined && f.pred !== null){
+    setText('kpiPred', fmt(f.pred,2));
+    setText('tagPI', `PI 80%: ${fmt(f.lo,2)}–${fmt(f.hi,2)}`);
+    setText('tagHours', `Ore: ${f.hours_used ?? "—"}`);
+    setText('fcSub', `Metodo: ${f.method || "—"}`);
+  } else {
+    setText('kpiPred', "—");
+    setText('tagPI', "PI 80%: —");
+    setText('tagHours', "Ore: —");
+    setText('fcSub', f && f.__error ? `Errore forecast (${f.status || "network"})` : "Forecast non disponibile");
+  }
+
+  // PROGNOSIS
+  const c = (p && p.course) ? p.course : null;
+  const t = (p && p.time_to_severe) ? p.time_to_severe : null;
+  const so = (p && p.symptoms_outlook) ? p.symptoms_outlook : null;
+
+  if(c && c.status==="ok"){
+    setText('kpiCourse', (c.course || "—").toUpperCase());
+    setText('tagTrend', `Trend: ${fmt(c.trend_tsi_per_day,3)}/g`);
+    if(t && t.status==="ok" && t.reachable){
+      setText('tagSevere', `Grave: ${fmt(t.days_est,1)}g`);
+    } else if(t && t.status==="ok" && t.reachable===false){
+      setText('tagSevere', `Grave: non stimabile`);
+    } else {
+      setText('tagSevere', `Grave: —`);
+    }
+    setText('progSub', `Sintomi: ${so && so.likely ? so.likely : "—"} | confidenza: ${c.confidence || "—"}`);
+  } else {
+    setText('kpiCourse', "—");
+    setText('tagTrend', "Trend: —");
+    setText('tagSevere', "Grave: —");
+    setText('progSub', (c && c.message) ? c.message : "Prognosi non disponibile");
+  }
+
+  // PROGRESSION
+  if(g && g.status === "ok"){
+    const st = g.state || {};
+    const rk = g.risk || {};
+    setText('kpiRisk', `DPI ${fmt(st.dpi_current,1)}`);
+    setText('tagR30', `30g: ${fmt(rk.risk_30d,1)}%`);
+    setText('tagR90', `90g: ${fmt(rk.risk_90d,1)}%`);
+    setText('riskSub', `Trend DPI: ${fmt(st.dpi_trend_per_day,3)}/g`);
+
+    setText('kpiProgState', (st.state || "—").toUpperCase());
+    setText('progVol', `Volatilità: ${fmt(st.volatility,2)}`);
+    setText('progEvents', `Eventi 7g: ${st.events_last7 ?? "—"}`);
+    setText('progStateSub', `Cadute 7g: ${st.falls_last7 ?? "—"}`);
+  } else {
+    setText('kpiRisk', "—");
+    setText('tagR30', "30g: —");
+    setText('tagR90', "90g: —");
+    setText('kpiProgState', "—");
+  }
+
+  // CHARTS
+  if(samples && samples.rows){
+    const ptsTSI = samples.rows
+      .filter(r=>r.tsi!==null && r.tsi!==undefined)
+      .map(r=>({
+        y: Number(r.tsi),
+        label: tsLabel(r.ts),
+        yLabel: `TSI ${fmt(r.tsi,2)}`
+      }));
+    lineChart(el('chartTSI'), ptsTSI, {id:'tsi', color:'#20c997'});
+
+    const ptsTremor = samples.rows
+      .filter(r=>r.tremor_f!==null && r.tremor_f!==undefined)
+      .map(r=>({
+        y: Number(r.tremor_f),
+        label: tsLabel(r.ts),
+        yLabel: `${fmt(r.tremor_f,2)} Hz`
+      }));
+    lineChart(el('chartTremor'), ptsTremor, {id:'tremor', color:'#f59e0b'});
+
+    const ptsSignal = samples.rows
+      .filter(r=>r.rms_diff!==null && r.band_4_6!==null)
+      .map(r=>({
+        y: Number(r.rms_diff)*100,
+        label: tsLabel(r.ts),
+        yLabel: `RMS ${fmt(r.rms_diff*100,2)}`
+      }));
+    lineChart(el('chartSignal'), ptsSignal, {id:'signal', color:'#3b82f6'});
+  }
+
+  if(daily && daily.rows){
+    const ptsDaily = daily.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({
+        y: Number(r.tsi_mean),
+        label: dayLabel(r.day),
+        yLabel: `TSI ${fmt(r.tsi_mean,2)}`
+      }));
+    lineChart(el('chartTSIDaily'), ptsDaily, {id:'tsid', color:'#94a3b8'});
+
+    const ptsDPI = daily.rows
+      .filter(r=>r.dpi!==null)
+      .map(r=>({
+        y: Number(r.dpi),
+        label: dayLabel(r.day),
+        yLabel: `DPI ${fmt(r.dpi,2)}`
+      }));
+    lineChart(el('chartDPI'), ptsDPI, {id:'dpi', color:'#22d3ee'});
+  }
+
+  if(events && events.rows){
+    const byDay = aggregateEventsByDay(events.rows);
+    const ptsEv = byDay.map(r=>({y:r.total, label:r.day, yLabel:`Tot ${r.total}`}));
+    lineChart(el('chartEvents'), ptsEv, {id:'ev', color:'#fb7185'});
+
+    const ptsType = byDay.map(r=>({y:(r.fall||0)+(r.near_fall||0), label:r.day, yLabel:`Fall/Near ${r.fall||0}/${r.near_fall||0}`}));
+    lineChart(el('chartEventsType'), ptsType, {id:'evtype', color:'#f59e0b'});
+  }
+
+  if(forecasts && forecasts.rows){
+    const ptsFc = forecasts.rows
+      .filter(r=>r.horizon_h===72 && r.pred!==null)
+      .map(r=>({
+        y:Number(r.pred),
+        label: tsLabel(r.created_ts),
+        yLabel: `Pred ${fmt(r.pred,2)}`
+      }));
+    lineChart(el('chartForecast'), ptsFc, {id:'fc', color:'#60a5fa'});
+  }
+
+  if(weekly && weekly.rows){
+    const ptsW = weekly.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({y:Number(r.tsi_mean), label:r.week, yLabel:`TSI ${fmt(r.tsi_mean,2)}`}));
+    lineChart(el('chartWeekly'), ptsW, {id:'wk', color:'#34d399'});
+  }
+
+  if(monthly && monthly.rows){
+    const ptsM = monthly.rows
+      .filter(r=>r.tsi_mean!==null)
+      .map(r=>({y:Number(r.tsi_mean), label:r.month, yLabel:`TSI ${fmt(r.tsi_mean,2)}`}));
+    lineChart(el('chartMonthly'), ptsM, {id:'mo', color:'#fbbf24'});
+  }
+
+  // Feedback chart (solo dati reali)
+  if(feedback && feedback.rows){
+    const ptsFb = feedback.rows.map(r=>({
+      y: Number(r.score),
+      label: r.day,
+      yLabel: `Score ${fmt(r.score,1)}`
+    }));
+    lineChart(el('chartFeedback'), ptsFb, {id:'fb', color:'#a78bfa'});
+  } else {
+    lineChart(el('chartFeedback'), [], {id:'fb', color:'#a78bfa'});
+  }
+}
+
+async function genPDF(){
+  setText('pdfres', 'Generazione in corso…');
+  const r = await safeJson('/api/report/pdf');
+  if(r && r.ok){
+    setText('pdfres', 'PDF creato. Usa “Scarica report.pdf”.');
+    const dlBtn = el('dlBtn');
+    if(dlBtn) dlBtn.href = "/download/report.pdf?ts=" + Date.now();
+  } else {
+    setText('pdfres', 'Errore generazione PDF.');
+  }
+}
+
+async function sendFeedback(){
+  const day = el('day')?.value.trim() || "";
+  const score = el('score')?.value.trim() || "";
+  const note = el('note')?.value.trim() || "";
+
+  if(!day || !score){
+    const elRes = el('fbres');
+    if(elRes){
+      elRes.className = "err";
+      elRes.textContent = "Compila giorno e score";
+    }
+    return;
+  }
+
+  const r = await safeJson('/api/feedback', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({day, score, note})
+  });
+  const elRes = el('fbres');
+  if(!elRes) return;
+  if(r && r.ok){
+    elRes.className = "ok";
+    elRes.textContent = "salvato";
+  } else {
+    elRes.className = "err";
+    elRes.textContent = r && r.error ? r.error : "errore";
+  }
+}
+
+function downloadCSV(range){
+  const tableSel = el('tableSel');
+  if(!tableSel) return;
+  const table = tableSel.value;
+  const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
+  window.location.href = url;
+  setText('csvStatus', `Download ${table} (${range})…`);
+}
+
+const dayInput = el('day');
+if(dayInput){
+  const d = new Date();
+  dayInput.value = d.toISOString().slice(0,10);
+}
+
+const currentPage = document.body.dataset.page;
+if(currentPage){
+  const active = document.querySelector(`.nav a[data-page="${currentPage}"]`);
+  if(active) active.classList.add('active');
+}
+
+loadAll();
+setInterval(loadAll, 6000);
+</script>
+</body>
+</html>

@@ -35,7 +35,47 @@ REPORT_PATH = "/tmp/report.pdf" if os.getenv("RENDER") else "report.pdf"
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "page": "overview"})
+
+@app.get("/series", response_class=HTMLResponse)
+def series_page(request: Request):
+    return templates.TemplateResponse("series.html", {"request": request, "page": "series"})
+
+@app.get("/tremor", response_class=HTMLResponse)
+def tremor_page(request: Request):
+    return templates.TemplateResponse("tremor.html", {"request": request, "page": "tremor"})
+
+@app.get("/events", response_class=HTMLResponse)
+def events_page(request: Request):
+    return templates.TemplateResponse("events.html", {"request": request, "page": "events"})
+
+@app.get("/feedback", response_class=HTMLResponse)
+def feedback_page(request: Request):
+    return templates.TemplateResponse("feedback.html", {"request": request, "page": "feedback"})
+
+@app.get("/progression", response_class=HTMLResponse)
+def progression_page(request: Request):
+    return templates.TemplateResponse("progression.html", {"request": request, "page": "progression"})
+
+@app.get("/forecasts", response_class=HTMLResponse)
+def forecasts_page(request: Request):
+    return templates.TemplateResponse("forecasts.html", {"request": request, "page": "forecasts"})
+
+@app.get("/aggregations", response_class=HTMLResponse)
+def aggregations_page(request: Request):
+    return templates.TemplateResponse("aggregations.html", {"request": request, "page": "aggregations"})
+
+@app.get("/export", response_class=HTMLResponse)
+def export_page(request: Request):
+    return templates.TemplateResponse("export.html", {"request": request, "page": "export"})
+
+@app.get("/report", response_class=HTMLResponse)
+def report_page(request: Request):
+    return templates.TemplateResponse("report.html", {"request": request, "page": "report"})
+
+@app.get("/debug", response_class=HTMLResponse)
+def debug_page(request: Request):
+    return templates.TemplateResponse("debug.html", {"request": request, "page": "debug"})
 
 @app.get("/ping")
 def ping():
@@ -64,6 +104,11 @@ async def feedback(request: Request, day: str = None, score: int = None, note: s
 
     if day is None or score is None:
         return {"ok": False, "error": "day and score required"}
+
+    try:
+        score = int(score)
+    except Exception:
+        return {"ok": False, "error": "score must be integer 1..5"}
 
     if score < 1 or score > 5:
         return {"ok": False, "error": "score must be 1..5"}

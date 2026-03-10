@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page">
+  <h3>Pagina 6 · Progressione & DPI</h3>
+  <div class="grid">
+    <div class="card span-8">
+      <h2>DPI (90 giorni)</h2>
+      <div id="chartDPI" class="chart"></div>
+    </div>
+    <div class="card span-4">
+      <h2>STATO PROGRESSIONE</h2>
+      <div class="kpi" id="kpiProgState">—</div>
+      <div class="row" style="margin-top:10px">
+        <div class="tag" id="progVol">Volatilità: —</div>
+        <div class="tag" id="progEvents">Eventi 7g: —</div>
+      </div>
+      <div class="sub" id="progStateSub">—</div>
+    </div>
+  </div>
+</section>
+{% endblock %}
