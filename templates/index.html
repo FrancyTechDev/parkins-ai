@@ -154,11 +154,18 @@
     }
     .scroll-arrows{
       position: fixed;
-      right: 12px;
+      left: 12px;
       bottom: 18px;
       display: none;
       flex-direction: column;
       gap: 10px;
+      z-index: 5;
+    }
+    .standby-btn{
+      position: fixed;
+      right: 12px;
+      bottom: 18px;
+      display: none;
       z-index: 5;
     }
     .scroll-btn{
@@ -182,6 +189,7 @@
     .scroll-btn:active{transform: translateY(1px)}
     @media (max-width: 520px){
       .scroll-arrows{display:flex}
+      .standby-btn{display:block}
     }
   </style>
 </head>
@@ -189,8 +197,9 @@
   <div class="scroll-arrows" aria-label="Scorrimento rapido">
     <button class="scroll-btn" onclick="scrollStep(-1)" aria-label="Scorri su">↑</button>
     <button class="scroll-btn" onclick="scrollStep(1)" aria-label="Scorri giù">↓</button>
+  </div>
+  <div class="standby-btn" aria-label="Standby">
     <button class="scroll-btn label" onclick="sleepDevice()" aria-label="Standby">Standby</button>
-    <button class="scroll-btn label" onclick="wakeDevice()" aria-label="Wake">Wake</button>
   </div>
   <div class="wrap">
     <div class="top">
