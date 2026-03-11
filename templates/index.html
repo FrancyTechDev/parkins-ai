@@ -161,9 +161,26 @@
       padding:12px; border-radius: var(--r);
       max-height: 360px; overflow:auto;
     }
+    .wake-btn{
+      position: fixed;
+      right: 12px;
+      bottom: 18px;
+      display: none;
+      z-index: 5;
+    }
+    .wake-btn .btn{
+      font-size: 16px;
+      padding: 14px 18px;
+    }
+    @media (max-width: 520px){
+      .wake-btn{display:block}
+    }
   </style>
 </head>
 <body>
+  <div class="wake-btn" aria-label="Wake">
+    <button class="btn" onclick="wakeDevice()">Wake</button>
+  </div>
   <div class="wrap">
     <div class="top">
       <div class="brand">
