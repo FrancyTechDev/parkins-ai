@@ -148,9 +148,38 @@
       padding:12px; border-radius: var(--r);
       max-height: 360px; overflow:auto;
     }
+    .scroll-arrows{
+      position: fixed;
+      right: 12px;
+      bottom: 18px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 5;
+    }
+    .scroll-btn{
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(18,26,36,.85);
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .scroll-btn:active{transform: translateY(1px)}
+    @media (max-width: 520px){
+      .scroll-arrows{display:flex}
+    }
   </style>
 </head>
 <body>
+  <div class="scroll-arrows" aria-label="Scorrimento rapido">
+    <button class="scroll-btn" onclick="scrollStep(-1)" aria-label="Scorri su">↑</button>
+    <button class="scroll-btn" onclick="scrollStep(1)" aria-label="Scorri giù">↓</button>
+  </div>
   <div class="wrap">
     <div class="top">
       <div class="brand">
@@ -800,6 +829,11 @@ function downloadCSV(range){
   const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
   window.location.href = url;
   setText('csvStatus', `Download ${table} (${range})…`);
+}
+
+function scrollStep(dir){
+  const step = 300;
+  window.scrollBy({ top: step * dir, behavior: "smooth" });
 }
 
 function updateIngestUI(mode){
