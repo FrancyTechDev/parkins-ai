@@ -34,6 +34,15 @@
       -webkit-user-select: none;
       -ms-user-select: none;
       touch-action: manipulation;
+      scrollbar-width: auto;
+      scrollbar-color: #94a3b8 rgba(11,15,23,.35);
+    }
+    body::-webkit-scrollbar{width:16px}
+    body::-webkit-scrollbar-track{background: rgba(11,15,23,.35)}
+    body::-webkit-scrollbar-thumb{
+      background: #94a3b8;
+      border-radius: 12px;
+      border: 3px solid rgba(11,15,23,.35);
     }
     a{color:var(--acc-3); text-decoration:none}
     .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 60px}
@@ -152,55 +161,9 @@
       padding:12px; border-radius: var(--r);
       max-height: 360px; overflow:auto;
     }
-    .scroll-arrows{
-      position: fixed;
-      left: 12px;
-      bottom: 18px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 5;
-    }
-    .standby-btn{
-      position: fixed;
-      right: 12px;
-      bottom: 18px;
-      display: none;
-      z-index: 5;
-    }
-    .scroll-btn{
-      width: 60px;
-      height: 60px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(18,26,36,.85);
-      color: var(--ink);
-      font-size: 24px;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: var(--shadow);
-    }
-    .scroll-btn.label{
-      width: 140px;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-    .scroll-btn:active{transform: translateY(1px)}
-    @media (max-width: 520px){
-      .scroll-arrows{display:flex}
-      .standby-btn{display:block}
-    }
   </style>
 </head>
 <body>
-  <div class="scroll-arrows" aria-label="Scorrimento rapido">
-    <button class="scroll-btn" onclick="scrollStep(-1)" aria-label="Scorri su">↑</button>
-    <button class="scroll-btn" onclick="scrollStep(1)" aria-label="Scorri giù">↓</button>
-  </div>
-  <div class="standby-btn" aria-label="Standby">
-    <button class="scroll-btn label" onclick="sleepDevice()" aria-label="Standby">Standby</button>
-  </div>
   <div class="wrap">
     <div class="top">
       <div class="brand">
@@ -850,11 +813,6 @@ function downloadCSV(range){
   const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
   window.location.href = url;
   setText('csvStatus', `Download ${table} (${range})…`);
-}
-
-function scrollStep(dir){
-  const step = 300;
-  window.scrollBy({ top: step * dir, behavior: "smooth" });
 }
 
 function sleepDevice(){
