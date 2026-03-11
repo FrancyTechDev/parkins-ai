@@ -878,5 +878,27 @@ loadSettings();
 setInterval(loadAll, 6000);
 setInterval(loadSettings, 10000);
 </script>
+<script>
+let startX = 0;
+let startY = 0;
+
+document.addEventListener("touchstart", e => {
+  if(!e.touches || !e.touches[0]) return;
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+document.addEventListener("touchend", e => {
+  if(!e.changedTouches || !e.changedTouches[0]) return;
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+
+  const dy = endY - startY;
+
+  if(startX < 100 && startY < 100 && dy > 200){
+    fetch("/sleep");
+  }
+});
+</script>
 </body>
 </html>
