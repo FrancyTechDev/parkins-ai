@@ -30,6 +30,10 @@
         radial-gradient(900px 600px at 85% 10%, rgba(59,130,246,.18), transparent 55%),
         radial-gradient(900px 700px at 75% 85%, rgba(245,158,11,.18), transparent 60%),
         var(--bg);
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      touch-action: manipulation;
     }
     a{color:var(--acc-3); text-decoration:none}
     .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 60px}
@@ -158,16 +162,22 @@
       z-index: 5;
     }
     .scroll-btn{
-      width: 44px;
-      height: 44px;
+      width: 60px;
+      height: 60px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(18,26,36,.85);
       color: var(--ink);
-      font-size: 18px;
+      font-size: 24px;
       font-weight: 800;
       cursor: pointer;
       box-shadow: var(--shadow);
+    }
+    .scroll-btn.label{
+      width: 140px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .2px;
     }
     .scroll-btn:active{transform: translateY(1px)}
     @media (max-width: 520px){
@@ -179,6 +189,8 @@
   <div class="scroll-arrows" aria-label="Scorrimento rapido">
     <button class="scroll-btn" onclick="scrollStep(-1)" aria-label="Scorri su">↑</button>
     <button class="scroll-btn" onclick="scrollStep(1)" aria-label="Scorri giù">↓</button>
+    <button class="scroll-btn label" onclick="sleepDevice()" aria-label="Standby">Standby</button>
+    <button class="scroll-btn label" onclick="wakeDevice()" aria-label="Wake">Wake</button>
   </div>
   <div class="wrap">
     <div class="top">
@@ -836,6 +848,14 @@ function scrollStep(dir){
   window.scrollBy({ top: step * dir, behavior: "smooth" });
 }
 
+function sleepDevice(){
+  fetch('/sleep');
+}
+
+function wakeDevice(){
+  fetch('/wake');
+}
+
 function updateIngestUI(mode){
   const label = (mode || "—").toString().toUpperCase();
   setText('ingestModeText', label);
@@ -896,7 +916,7 @@ document.addEventListener("touchend", e => {
   const dy = endY - startY;
 
   if(startX < 100 && startY < 100 && dy > 200){
-    fetch("/sleep");
+    sleepDevice();
   }
 });
 </script>
