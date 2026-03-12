@@ -412,9 +412,19 @@
                 <option value="user_profile">user_profile</option>
               </select>
             </div>
-            <button class="btn" onclick="downloadCSV('week')">Ultima settimana</button>
-            <button class="btn" onclick="downloadCSV('month')">Ultimo mese</button>
-            <button class="btn" onclick="downloadCSV('year')">Ultimo anno</button>
+            <div style="min-width:180px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="rangeSel">Intervallo</label>
+              <select id="rangeSel">
+                <option value="week">Ultima settimana</option>
+                <option value="month">Ultimo mese</option>
+                <option value="year">Ultimo anno</option>
+              </select>
+            </div>
+            <div style="min-width:220px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="exportDeviceSel">Dispositivo</label>
+              <select id="exportDeviceSel"></select>
+            </div>
+            <button class="btn" onclick="downloadSelected()">Scarica tabella selezionata</button>
             <span class="muted" id="csvStatus"></span>
           </div>
           <div class="sub">Il CSV include tutte le colonne della tabella selezionata nel periodo scelto.</div>
@@ -495,6 +505,17 @@
           <div class="sub" style="margin-top:10px">
             Seleziona una modalit&#224; in base al consumo di memoria e alla necessit&#224; di tracciare eventi.
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 13: USB EXPORT -->
+    <section class="page">
+      <h3>Pagina 13 · Dispositivi USB & Export</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>DISPOSITIVI COLLEGATI</h2>
+          <div id="usbList" class="sub">Nessun dispositivo rilevato.</div>
         </div>
       </div>
     </section>
@@ -584,7 +605,7 @@ function lineChart(el, points, opts){
 
 function tsLabel(ts){
   const d = new Date(ts*1000);
-  return d.toISOString().slice(0,16).replace('T',' ');
+  return d.toLocaleString('it-IT');
 }
 
 function dayLabel(day){
@@ -853,12 +874,59 @@ function downloadCSV(range){
   setText('csvStatus', `Download ${table} (${range})…`);
 }
 
+function downloadSelected(){
+  const table = document.getElementById('tableSel').value;
+  const range = document.getElementById('rangeSel').value;
+  const mount = document.getElementById('exportDeviceSel').value;
+  if(mount){
+    setText('csvStatus', 'Salvataggio su dispositivo…');
+    safeJson(`/api/export_to_device?mount=${encodeURIComponent(mount)}&table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`)
+      .then(r=>{
+        if(r && r.ok){
+          setText('csvStatus', `Salvato: ${r.filename}`);
+        } else {
+          setText('csvStatus', r && r.error ? r.error : 'Errore salvataggio');
+        }
+      });
+    return;
+  }
+  const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
+  window.location.href = url;
+  setText('csvStatus', `Download ${table} (${range})…`);
+}
+
 function sleepDevice(){
   fetch('/sleep');
 }
 
 function wakeDevice(){
   fetch('/wake');
+}
+
+async function loadUsbDevices(){
+  const sel = document.getElementById('exportDeviceSel');
+  const list = document.getElementById('usbList');
+  if(!sel || !list) return;
+  const r = await safeJson('/api/usb');
+  sel.innerHTML = '';
+  const baseOpt = document.createElement('option');
+  baseOpt.value = '';
+  baseOpt.textContent = 'Download nel browser';
+  sel.appendChild(baseOpt);
+  if(r && r.ok && Array.isArray(r.devices) && r.devices.length){
+    list.innerHTML = '';
+    r.devices.forEach(d=>{
+      const opt = document.createElement('option');
+      opt.value = d.path;
+      opt.textContent = `${d.label} (${d.path})`;
+      sel.appendChild(opt);
+      const row = document.createElement('div');
+      row.textContent = `${d.label} (${d.path})`;
+      list.appendChild(row);
+    });
+  } else {
+    list.textContent = 'Nessun dispositivo rilevato.';
+  }
 }
 
 function updateIngestUI(mode){
@@ -900,8 +968,10 @@ if(dayInput){
 
 loadAll();
 loadSettings();
+loadUsbDevices();
 setInterval(loadAll, 6000);
 setInterval(loadSettings, 10000);
+setInterval(loadUsbDevices, 15000);
 </script>
 <script>
 let startX = 0;
