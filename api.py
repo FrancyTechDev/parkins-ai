@@ -335,22 +335,43 @@ def list_usb_devices():
         except Exception:
             pass
     else:
-        bases = ["/media", "/mnt", "/run/media"]
-        for base in bases:
-            if not os.path.isdir(base):
-                continue
-            for name in os.listdir(base):
-                path = os.path.join(base, name)
-                if not os.path.isdir(path):
+        # Prefer real mount points from /proc/mounts (Raspberry/Linux)
+        try:
+            with open("/proc/mounts", "r", encoding="utf-8") as f:
+                mounts = f.readlines()
+            for line in mounts:
+                parts = line.split()
+                if len(parts) < 2:
                     continue
-                # If base is /media, there may be /media/<user>/<label>
-                if base == "/media":
-                    for sub in os.listdir(path):
-                        sub_path = os.path.join(path, sub)
-                        if os.path.isdir(sub_path):
-                            devices.append({"label": sub, "path": sub_path})
-                else:
-                    devices.append({"label": name, "path": path})
+                dev, mnt = parts[0], parts[1]
+                if not dev.startswith("/dev/"):
+                    continue
+                if not (dev.startswith("/dev/sd") or dev.startswith("/dev/mmcblk")):
+                    continue
+                if not (mnt.startswith("/media/") or mnt.startswith("/mnt/") or mnt.startswith("/run/media/")):
+                    continue
+                label = os.path.basename(mnt.rstrip("/")) or mnt
+                devices.append({"label": label, "path": mnt})
+        except Exception:
+            pass
+        # Fallback scan common mount folders
+        if not devices:
+            bases = ["/media", "/mnt", "/run/media"]
+            for base in bases:
+                if not os.path.isdir(base):
+                    continue
+                for name in os.listdir(base):
+                    path = os.path.join(base, name)
+                    if not os.path.isdir(path):
+                        continue
+                    # /media/<user>/<label>
+                    if base == "/media":
+                        for sub in os.listdir(path):
+                            sub_path = os.path.join(path, sub)
+                            if os.path.isdir(sub_path):
+                                devices.append({"label": sub, "path": sub_path})
+                    else:
+                        devices.append({"label": name, "path": path})
     return devices
 
 @app.get("/api/usb")
