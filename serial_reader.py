@@ -29,6 +29,7 @@ def run():
 
         ts = int(msg["ts"])
         rms = float(msg["rms_diff"])
+        rms2 = float(msg["rms2"]) if msg.get("rms2") is not None else None
         band = float(msg["band_4_6"])
         peaks = float(msg["peaks"])
         tremor_f = msg.get("tremor_f")
@@ -55,12 +56,12 @@ def run():
             continue
 
         c.execute(
-            "INSERT OR REPLACE INTO samples_ref(ts,rms_diff,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
-            (ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
+            "INSERT OR REPLACE INTO samples_ref(ts,rms_diff,rms2,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (ts, rms, rms2, band, peaks, tremor_f, gsr, batt, qf, tsi)
         )
         c.commit()
-        insert_history_sample(ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
+        insert_history_sample(ts, rms, rms2, band, peaks, tremor_f, gsr, batt, qf, tsi)
 
 if __name__ == "__main__":
     run()

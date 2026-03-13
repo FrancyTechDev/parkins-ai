@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.templating import Jinja2Templates
+import ctypes
 
 from db import init_db, connect, get_setting, set_setting, history_table_for_ts, ensure_history_table
 from demo_seed import seed_demo
@@ -23,13 +24,7 @@ templates = Jinja2Templates(directory="templates")
 
 init_db()
 
-# DEMO: popola DB una sola volta se vuoto
-if os.getenv("DEMO_MODE") == "1":
-    try:
-        seed_demo(days=7, step_sec=10)
-    except Exception:
-        # non deve far crashare il server
-        pass
+# DEMO seed disabilitato: evitare dati simulati in DB
 
 REPORT_PATH = "/tmp/report.pdf" if os.getenv("RENDER") else "report.pdf"
 
@@ -234,7 +229,7 @@ def series_samples(days: int = 7, limit: int = 5000):
     since_ts = int(time.time()) - int(days) * 86400
     c = connect()
     df = pd.read_sql(
-        "SELECT ts, tsi, tremor_f, rms_diff, band_4_6, peaks, gsr, batt, qf "
+        "SELECT ts, tsi, tremor_f, rms_diff, rms2, band_4_6, peaks, gsr, batt, qf "
         "FROM samples_ref WHERE ts >= ? ORDER BY ts ASC LIMIT ?",
         c, params=(since_ts, limit)
     )
@@ -325,6 +320,64 @@ TABLES = {
     "user_profile": {"ts_col": "updated_ts", "type": "ts"},
 }
 
+def list_usb_devices():
+    devices = []
+    if os.name == "nt":
+        try:
+            bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+            for i in range(26):
+                if bitmask & (1 << i):
+                    drive = f"{chr(65+i)}:\\"
+                    dtype = ctypes.windll.kernel32.GetDriveTypeW(drive)
+                    # 2 = DRIVE_REMOVABLE
+                    if dtype == 2:
+                        devices.append({"label": "USB", "path": drive})
+        except Exception:
+            pass
+    else:
+        # Prefer real mount points from /proc/mounts (Raspberry/Linux)
+        try:
+            with open("/proc/mounts", "r", encoding="utf-8") as f:
+                mounts = f.readlines()
+            for line in mounts:
+                parts = line.split()
+                if len(parts) < 2:
+                    continue
+                dev, mnt = parts[0], parts[1]
+                if not dev.startswith("/dev/"):
+                    continue
+                if not (dev.startswith("/dev/sd") or dev.startswith("/dev/mmcblk")):
+                    continue
+                if not (mnt.startswith("/media/") or mnt.startswith("/mnt/") or mnt.startswith("/run/media/")):
+                    continue
+                label = os.path.basename(mnt.rstrip("/")) or mnt
+                devices.append({"label": label, "path": mnt})
+        except Exception:
+            pass
+        # Fallback scan common mount folders
+        if not devices:
+            bases = ["/media", "/mnt", "/run/media"]
+            for base in bases:
+                if not os.path.isdir(base):
+                    continue
+                for name in os.listdir(base):
+                    path = os.path.join(base, name)
+                    if not os.path.isdir(path):
+                        continue
+                    # /media/<user>/<label>
+                    if base == "/media":
+                        for sub in os.listdir(path):
+                            sub_path = os.path.join(path, sub)
+                            if os.path.isdir(sub_path):
+                                devices.append({"label": sub, "path": sub_path})
+                    else:
+                        devices.append({"label": name, "path": path})
+    return devices
+
+@app.get("/api/usb")
+def api_usb_devices():
+    return {"ok": True, "devices": list_usb_devices()}
+
 @app.get("/api/export")
 def export_csv(table: str, range: str = "week"):
     if table not in TABLES:
@@ -355,3 +408,39 @@ def export_csv(table: str, range: str = "week"):
     filename = f"{table}_{range}.csv"
     return Response(content, media_type="text/csv",
                     headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+@app.get("/api/export_to_device")
+def export_csv_to_device(mount: str, table: str, range: str = "week"):
+    if table not in TABLES:
+        return {"ok": False, "error": "invalid table"}
+    devices = [d["path"] for d in list_usb_devices()]
+    if mount not in devices:
+        return {"ok": False, "error": "device not available"}
+
+    days = {"week": 7, "month": 30, "year": 365}.get(range, 7)
+    cfg = TABLES[table]
+    c = connect()
+    cur = c.cursor()
+
+    if cfg["type"] == "ts":
+        since_ts = int(time.time()) - days * 86400
+        cur.execute(f"SELECT * FROM {table} WHERE {cfg['ts_col']} >= ? ORDER BY {cfg['ts_col']} ASC", (since_ts,))
+    else:
+        since_day = (datetime.utcnow().date() - timedelta(days=days)).isoformat()
+        cur.execute(f"SELECT * FROM {table} WHERE {cfg['ts_col']} >= ? ORDER BY {cfg['ts_col']} ASC", (since_day,))
+
+    rows = cur.fetchall()
+    headers = [d[0] for d in cur.description] if cur.description else []
+    c.close()
+
+    filename = f"{table}_{range}.csv"
+    out_path = os.path.join(mount, filename)
+    try:
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            writer.writerows(rows)
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    return {"ok": True, "filename": filename, "path": out_path}

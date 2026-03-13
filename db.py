@@ -19,6 +19,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS samples_ref (
       ts INTEGER PRIMARY KEY,
       rms_diff REAL NOT NULL,
+      rms2 REAL,
       band_4_6 REAL NOT NULL,
       peaks REAL NOT NULL,
       tremor_f REAL,
@@ -141,6 +142,10 @@ def init_db():
         _ensure_events_columns()
     except Exception:
         pass
+    try:
+        _ensure_samples_columns()
+    except Exception:
+        pass
 
 def get_setting(key, default=None):
     c = connect()
@@ -176,6 +181,16 @@ def _ensure_events_columns():
     c.commit()
     c.close()
 
+def _ensure_samples_columns():
+    c = connect()
+    cur = c.cursor()
+    cur.execute("PRAGMA table_info(samples_ref)")
+    cols = {r[1] for r in cur.fetchall()}
+    if "rms2" not in cols:
+        cur.execute("ALTER TABLE samples_ref ADD COLUMN rms2 REAL")
+    c.commit()
+    c.close()
+
 def history_table_for_ts(ts: int):
     import datetime as _dt
     day = _dt.datetime.fromtimestamp(int(ts)).strftime("%Y_%m_%d")
@@ -188,6 +203,7 @@ def ensure_history_table(table_name: str):
     CREATE TABLE IF NOT EXISTS {table_name} (
       ts INTEGER PRIMARY KEY,
       rms_diff REAL NOT NULL,
+      rms2 REAL,
       band_4_6 REAL NOT NULL,
       peaks REAL NOT NULL,
       tremor_f REAL,
@@ -197,18 +213,22 @@ def ensure_history_table(table_name: str):
       tsi REAL
     )
     """)
+    cur.execute(f"PRAGMA table_info({table_name})")
+    cols = {r[1] for r in cur.fetchall()}
+    if "rms2" not in cols:
+        cur.execute(f"ALTER TABLE {table_name} ADD COLUMN rms2 REAL")
     cur.execute(f"CREATE INDEX IF NOT EXISTS idx_{table_name}_ts ON {table_name}(ts);")
     c.commit()
     c.close()
 
-def insert_history_sample(ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi):
+def insert_history_sample(ts, rms, rms2, band, peaks, tremor_f, gsr, batt, qf, tsi):
     table = history_table_for_ts(ts)
     ensure_history_table(table)
     c = connect()
     c.execute(
-        f"INSERT OR REPLACE INTO {table}(ts,rms_diff,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
-        "VALUES (?,?,?,?,?,?,?,?,?)",
-        (ts, rms, band, peaks, tremor_f, gsr, batt, qf, tsi)
+        f"INSERT OR REPLACE INTO {table}(ts,rms_diff,rms2,band_4_6,peaks,tremor_f,gsr,batt,qf,tsi) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (ts, rms, rms2, band, peaks, tremor_f, gsr, batt, qf, tsi)
     )
     c.commit()
     c.close()

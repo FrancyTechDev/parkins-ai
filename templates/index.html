@@ -30,6 +30,19 @@
         radial-gradient(900px 600px at 85% 10%, rgba(59,130,246,.18), transparent 55%),
         radial-gradient(900px 700px at 75% 85%, rgba(245,158,11,.18), transparent 60%),
         var(--bg);
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      touch-action: manipulation;
+      scrollbar-width: auto;
+      scrollbar-color: #94a3b8 rgba(11,15,23,.35);
+    }
+    body::-webkit-scrollbar{width:28px}
+    body::-webkit-scrollbar-track{background: rgba(11,15,23,.35)}
+    body::-webkit-scrollbar-thumb{
+      background: #94a3b8;
+      border-radius: 16px;
+      border: 5px solid rgba(11,15,23,.35);
     }
     a{color:var(--acc-3); text-decoration:none}
     .wrap{max-width:1200px; margin:0 auto; padding:28px 18px 60px}
@@ -148,9 +161,47 @@
       padding:12px; border-radius: var(--r);
       max-height: 360px; overflow:auto;
     }
+    .standby-btn{
+      position: fixed;
+      right: 12px;
+      bottom: 18px;
+      display: none;
+      z-index: 5;
+    }
+    @media (max-width: 520px){
+      .standby-btn{display:block}
+    }
+    .custom-scroll{
+      position: fixed;
+      right: 6px;
+      top: 10px;
+      bottom: 10px;
+      width: 30px;
+      background: rgba(11,15,23,.55);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      display: flex;
+      align-items: flex-start;
+      z-index: 4;
+    }
+    .custom-thumb{
+      width: 100%;
+      height: 80px;
+      background: #94a3b8;
+      border-radius: 16px;
+      border: 4px solid rgba(11,15,23,.55);
+      cursor: pointer;
+      touch-action: none;
+    }
   </style>
 </head>
 <body>
+  <div class="custom-scroll" id="customScroll" aria-label="Scrollbar">
+    <div class="custom-thumb" id="customThumb"></div>
+  </div>
+  <div class="standby-btn" aria-label="Standby">
+    <button class="btn" onclick="sleepDevice()" aria-label="Standby">Standby</button>
+  </div>
   <div class="wrap">
     <div class="top">
       <div class="brand">
@@ -361,9 +412,19 @@
                 <option value="user_profile">user_profile</option>
               </select>
             </div>
-            <button class="btn" onclick="downloadCSV('week')">Ultima settimana</button>
-            <button class="btn" onclick="downloadCSV('month')">Ultimo mese</button>
-            <button class="btn" onclick="downloadCSV('year')">Ultimo anno</button>
+            <div style="min-width:180px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="rangeSel">Intervallo</label>
+              <select id="rangeSel">
+                <option value="week">Ultima settimana</option>
+                <option value="month">Ultimo mese</option>
+                <option value="year">Ultimo anno</option>
+              </select>
+            </div>
+            <div style="min-width:220px; flex:1">
+              <label class="muted" style="font-size:12px; margin-bottom:6px; display:block" for="exportDeviceSel">Dispositivo</label>
+              <select id="exportDeviceSel"></select>
+            </div>
+            <button class="btn" onclick="downloadSelected()">Scarica tabella selezionata</button>
             <span class="muted" id="csvStatus"></span>
           </div>
           <div class="sub">Il CSV include tutte le colonne della tabella selezionata nel periodo scelto.</div>
@@ -444,6 +505,17 @@
           <div class="sub" style="margin-top:10px">
             Seleziona una modalit&#224; in base al consumo di memoria e alla necessit&#224; di tracciare eventi.
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGINA 13: USB EXPORT -->
+    <section class="page">
+      <h3>Pagina 13 · Dispositivi USB & Export</h3>
+      <div class="grid">
+        <div class="card span-12">
+          <h2>DISPOSITIVI COLLEGATI</h2>
+          <div id="usbList" class="sub">Nessun dispositivo rilevato.</div>
         </div>
       </div>
     </section>
@@ -531,9 +603,71 @@ function lineChart(el, points, opts){
   hit.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
 }
 
+function lineChartMulti(el, series, opts){
+  if(!el || !series || series.length === 0){
+    if(el) el.innerHTML = '<div class="sub" style="padding:12px">Dati non disponibili</div>';
+    return;
+  }
+  const w = el.clientWidth || 600;
+  const h = el.clientHeight || 220;
+  const pad = 24;
+  const allPoints = series.flatMap(s=>s.points || []);
+  if(allPoints.length === 0){
+    el.innerHTML = '<div class="sub" style="padding:12px">Dati non disponibili</div>';
+    return;
+  }
+  const ys = allPoints.map(p=>p.y);
+  const ymin = Math.min(...ys);
+  const ymax = Math.max(...ys);
+  const xScale = (i, n)=> pad + (i/(n-1 || 1))*(w-2*pad);
+  const yScale = (v)=> (h-pad) - ((v - ymin) / (ymax - ymin || 1))*(h-2*pad);
+
+  const paths = series.map((s, si)=>{
+    const pts = s.points || [];
+    const path = pts.map((p,i)=> `${xScale(i, pts.length).toFixed(2)},${yScale(p.y).toFixed(2)}`).join(' ');
+    return `<polyline fill="none" stroke="${s.color}" stroke-width="2.5" points="${path}" />`;
+  }).join('');
+
+  const svg = `
+    <svg viewBox="0 0 ${w} ${h}">
+      ${paths}
+      <line id="${opts.id}-v" x1="0" y1="${pad}" x2="0" y2="${h-pad}" stroke="rgba(255,255,255,.2)" stroke-width="1" />
+      <rect id="${opts.id}-hit" x="0" y="0" width="${w}" height="${h}" fill="transparent" />
+    </svg>`;
+  el.innerHTML = svg;
+
+  const tip = createTooltip(el);
+  const vline = el.querySelector(`#${opts.id}-v`);
+  const hit = el.querySelector(`#${opts.id}-hit`);
+
+  function showAt(i, x){
+    const first = series[0].points;
+    const cx = xScale(i, first.length);
+    vline.setAttribute('x1', cx);
+    vline.setAttribute('x2', cx);
+    const labels = series.map(s=>{
+      const p = s.points[i];
+      return `${s.label}: ${p && p.yLabel ? p.yLabel : p ? p.y : '—'}`;
+    }).join(' | ');
+    const p0 = first[i];
+    tip.style.left = `${x}px`;
+    tip.style.top = `${yScale(p0.y)}px`;
+    tip.style.display = 'block';
+    tip.textContent = `${p0.label} • ${labels}`;
+  }
+
+  hit.addEventListener('mousemove', (e)=>{
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const idx = Math.max(0, Math.min(series[0].points.length-1, Math.round((x / rect.width) * (series[0].points.length-1))));
+    showAt(idx, x);
+  });
+  hit.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
+}
+
 function tsLabel(ts){
   const d = new Date(ts*1000);
-  return d.toISOString().slice(0,16).replace('T',' ');
+  return d.toLocaleString('it-IT');
 }
 
 function dayLabel(day){
@@ -681,13 +815,23 @@ async function loadAll(){
     lineChart(document.getElementById('chartTremor'), ptsTremor, {id:'tremor', color:'#f59e0b'});
 
     const ptsSignal = samples.rows
-      .filter(r=>r.rms_diff!==null && r.band_4_6!==null)
+      .filter(r=>r.rms_diff!==null)
       .map(r=>({
-        y: Number(r.rms_diff)*100,
+        y: Number(r.rms_diff),
         label: tsLabel(r.ts),
-        yLabel: `RMS ${fmt(r.rms_diff*100,2)}`
+        yLabel: `RMS ${fmt(r.rms_diff,4)}`
       }));
-    lineChart(document.getElementById('chartSignal'), ptsSignal, {id:'signal', color:'#3b82f6'});
+    const ptsSignal2 = samples.rows
+      .filter(r=>r.rms2!==null && r.rms2!==undefined)
+      .map(r=>({
+        y: Number(r.rms2),
+        label: tsLabel(r.ts),
+        yLabel: `RMS2 ${fmt(r.rms2,4)}`
+      }));
+    lineChartMulti(document.getElementById('chartSignal'), [
+      {label: "RMS", color:'#3b82f6', points: ptsSignal},
+      {label: "RMS2", color:'#f59e0b', points: ptsSignal2}
+    ], {id:'signal'});
   }
 
   if(daily && daily.rows){
@@ -802,6 +946,61 @@ function downloadCSV(range){
   setText('csvStatus', `Download ${table} (${range})…`);
 }
 
+function downloadSelected(){
+  const table = document.getElementById('tableSel').value;
+  const range = document.getElementById('rangeSel').value;
+  const mount = document.getElementById('exportDeviceSel').value;
+  if(mount){
+    setText('csvStatus', 'Salvataggio su dispositivo…');
+    safeJson(`/api/export_to_device?mount=${encodeURIComponent(mount)}&table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`)
+      .then(r=>{
+        if(r && r.ok){
+          setText('csvStatus', `Salvato: ${r.filename}`);
+        } else {
+          setText('csvStatus', r && r.error ? r.error : 'Errore salvataggio');
+        }
+      });
+    return;
+  }
+  const url = `/api/export?table=${encodeURIComponent(table)}&range=${encodeURIComponent(range)}`;
+  window.location.href = url;
+  setText('csvStatus', `Download ${table} (${range})…`);
+}
+
+function sleepDevice(){
+  fetch('/sleep');
+}
+
+function wakeDevice(){
+  fetch('/wake');
+}
+
+async function loadUsbDevices(){
+  const sel = document.getElementById('exportDeviceSel');
+  const list = document.getElementById('usbList');
+  if(!sel || !list) return;
+  const r = await safeJson('/api/usb');
+  sel.innerHTML = '';
+  const baseOpt = document.createElement('option');
+  baseOpt.value = '';
+  baseOpt.textContent = 'Download nel browser';
+  sel.appendChild(baseOpt);
+  if(r && r.ok && Array.isArray(r.devices) && r.devices.length){
+    list.innerHTML = '';
+    r.devices.forEach(d=>{
+      const opt = document.createElement('option');
+      opt.value = d.path;
+      opt.textContent = `${d.label} (${d.path})`;
+      sel.appendChild(opt);
+      const row = document.createElement('div');
+      row.textContent = `${d.label} (${d.path})`;
+      list.appendChild(row);
+    });
+  } else {
+    list.textContent = 'Nessun dispositivo rilevato.';
+  }
+}
+
 function updateIngestUI(mode){
   const label = (mode || "—").toString().toUpperCase();
   setText('ingestModeText', label);
@@ -841,8 +1040,90 @@ if(dayInput){
 
 loadAll();
 loadSettings();
+loadUsbDevices();
 setInterval(loadAll, 6000);
 setInterval(loadSettings, 10000);
+setInterval(loadUsbDevices, 15000);
+</script>
+<script>
+let startX = 0;
+let startY = 0;
+
+document.addEventListener("touchstart", e => {
+  if(!e.touches || !e.touches[0]) return;
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+document.addEventListener("touchend", e => {
+  if(!e.changedTouches || !e.changedTouches[0]) return;
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+
+  const dy = endY - startY;
+
+  if(startX < 100 && startY < 100 && dy > 200){
+    sleepDevice();
+  }
+});
+
+const customScroll = document.getElementById('customScroll');
+const customThumb = document.getElementById('customThumb');
+let dragging = false;
+let dragOffsetY = 0;
+
+function updateCustomScroll(){
+  const doc = document.documentElement;
+  const scrollTop = doc.scrollTop || document.body.scrollTop;
+  const scrollHeight = doc.scrollHeight || document.body.scrollHeight;
+  const clientHeight = doc.clientHeight || window.innerHeight;
+  const trackHeight = customScroll.clientHeight;
+  const minThumb = 80;
+  const ratio = clientHeight / Math.max(scrollHeight, 1);
+  const thumbHeight = Math.max(minThumb, Math.floor(trackHeight * ratio));
+  const maxTop = trackHeight - thumbHeight;
+  const top = maxTop > 0 ? Math.round((scrollTop / (scrollHeight - clientHeight)) * maxTop) : 0;
+  customThumb.style.height = `${thumbHeight}px`;
+  customThumb.style.transform = `translateY(${top}px)`;
+}
+
+function scrollToFromThumb(clientY){
+  const trackRect = customScroll.getBoundingClientRect();
+  const doc = document.documentElement;
+  const scrollHeight = doc.scrollHeight || document.body.scrollHeight;
+  const clientHeight = doc.clientHeight || window.innerHeight;
+  const trackHeight = customScroll.clientHeight;
+  const thumbHeight = customThumb.getBoundingClientRect().height;
+  const maxTop = trackHeight - thumbHeight;
+  const y = Math.min(Math.max(clientY - trackRect.top - dragOffsetY, 0), maxTop);
+  const scrollTop = maxTop > 0 ? (y / maxTop) * (scrollHeight - clientHeight) : 0;
+  window.scrollTo({ top: scrollTop, behavior: "auto" });
+}
+
+customThumb.addEventListener('pointerdown', (e)=>{
+  dragging = true;
+  const rect = customThumb.getBoundingClientRect();
+  dragOffsetY = e.clientY - rect.top;
+  customThumb.setPointerCapture(e.pointerId);
+});
+customThumb.addEventListener('pointermove', (e)=>{
+  if(!dragging) return;
+  scrollToFromThumb(e.clientY);
+});
+customThumb.addEventListener('pointerup', (e)=>{
+  dragging = false;
+  customThumb.releasePointerCapture(e.pointerId);
+});
+
+customScroll.addEventListener('click', (e)=>{
+  if(e.target === customThumb) return;
+  dragOffsetY = customThumb.getBoundingClientRect().height / 2;
+  scrollToFromThumb(e.clientY);
+});
+
+window.addEventListener('scroll', updateCustomScroll, { passive: true });
+window.addEventListener('resize', updateCustomScroll);
+updateCustomScroll();
 </script>
 </body>
 </html>
