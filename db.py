@@ -2,9 +2,11 @@ import sqlite3
 import time
 import datetime as dt
 from config import DB_PATH
+import os
 
 
 def connect():
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
     try:
         conn.execute("PRAGMA journal_mode=WAL;")

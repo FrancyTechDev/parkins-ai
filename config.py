@@ -4,7 +4,11 @@ import os
 if os.getenv("RENDER"):
     DEFAULT_DB = "/tmp/db.sqlite"
 else:
-    DEFAULT_DB = "db.sqlite"
+    # Keep DB out of repo on Linux to avoid corruption during git pulls
+    if os.name == "nt":
+        DEFAULT_DB = "db.sqlite"
+    else:
+        DEFAULT_DB = "/var/lib/parkins/db.sqlite"
 
 DB_PATH = os.getenv("DB_PATH", DEFAULT_DB)
 
