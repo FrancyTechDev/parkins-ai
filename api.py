@@ -223,6 +223,20 @@ def report_pdf_generate():
 def download_report_pdf():
     return FileResponse(REPORT_PATH, media_type="application/pdf", filename="report.pdf")
 
+# ---- Screen control ----
+@app.get("/sleep")
+def sleep_screen():
+    # if script exists, execute it
+    if os.path.exists("sleep_screen.sh"):
+        os.system("bash sleep_screen.sh")
+    return {"ok": True}
+
+@app.get("/wake")
+def wake_screen():
+    if os.path.exists("wake_screen.sh"):
+        os.system("bash wake_screen.sh")
+    return {"ok": True}
+
 # ---- Series APIs (per grafici) ----
 @app.get("/api/series/samples")
 def series_samples(days: int = 7, limit: int = 5000):
